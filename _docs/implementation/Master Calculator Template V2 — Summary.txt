@@ -1,0 +1,126 @@
+Master Calculator Template V2 — Summary
+Based on: Canadian Mortgage Calculator (/canadian-mortgage-calculator)
+1. Final Page Structure
+Page Shell (page.tsx — server component)
+└── CalculatorLayout wrapper
+    └── CanadaMortgageCalculator.tsx (client component)
+        ├── BLOCK A — Input + Results (Top Row)
+        │   ├── Input Card (lg:col-span-7) — white card, compact 2-col input grid
+        │   └── Results Card (lg:col-span-5) — dark navy, big monthly payment
+        │
+        ├── BLOCK B — Visuals Row
+        │   ├── Payment Breakdown (donut chart + breakdown rows)
+        │   └── Compare Scenarios (15yr vs 30yr comparison)
+        │
+        ├── BLOCK C — AI Mortgage Analysis
+        │   ├── Header bar (dark navy gradient, Download PDF + Email Results pills)
+        │   ├── Dashboard body (bg #f4f6f9)
+        │   │   ├── Hero Row
+        │   │   │   ├── Mortgage Health Score card (white, col-5)
+        │   │   │   │   ├── SVG arc gauge (responsive: 160px mobile / 220px desktop)
+        │   │   │   │   └── Supporting copy (title + explanation)
+        │   │   │   └── Smart Optimization Found card (dark navy, col-7)
+        │   │   │       ├── Mobile: vertical stack (number → labels → 2-col KPI grid)
+        │   │   │       └── Desktop: 3-box horizontal row ($29,017 | $100/mo | <1yr)
+        │   │   └── Supporting Section (white card, 2-col at md+)
+        │   │       ├── Left col-5: Market Context + Affordability Ratios
+        │   │       └── Right col-7: Expert Insights (Rate Shock / Amortization / Insurance)
+        │   └── Footer disclaimer bar
+        │
+        ├── BLOCK D — Full Amortization Schedule
+        │   └── Collapsible accordion, full schedule table + year-by-year rows
+        │
+        ├── BLOCK E — How It Works / SEO Content
+        │   └── Long-form editorial content (kept for SEO, not collapsible yet)
+        │
+        └── BLOCK F — FAQ Accordion
+            └── Expandable Q&A items
+2. Approved Design System Rules Used
+Token	Value
+Primary teal	#1DB584
+Dark navy	#0D1B2A
+Card background	#ffffff
+Dashboard body	#f4f6f9
+Supporting panels	#fafbfc
+Card border	1px solid rgba(15,41,66,0.09)
+Card radius	rounded-2xl (20px)
+Card shadow	0 1px 4px rgba(0,0,0,0.04)
+Icon library	lucide-react only
+Font formatting	fmtCAD / fmtCADx — never raw toFixed(2)
+Max content width	max-w-6xl + px-4 outer
+Grid system	Tailwind grid-cols-12, breakpoint md: and lg:
+Input rows	space-y-3 mobile, two-col gap-x-2 md:gap-x-5
+3. Files Changed
+File	Change type
+app/canadian-mortgage-calculator/CanadaMortgageCalculator.tsx	Primary — all UI changes
+All other files: untouched.
+
+4. Desktop / Mobile Status
+Area	Desktop	Mobile
+Input card	✅ Approved	✅ Clean, 2-col compact grid
+Results card	✅ Approved	✅ Stacks below input
+AI Analysis hero row	✅ Approved	✅ Cards stack, separate mobile layout
+Health Score gauge	✅ 220px	✅ 160px, scales via width="100%"
+Smart Opt card	✅ 3-box horizontal	✅ Vertical stack + 2-col KPI grid
+Supporting section	✅ 2-col side-by-side	✅ Stacks cleanly
+AI header buttons	✅ Inline row	✅ flex-wrap, stacks if needed
+Scroll offset	✅ scroll-mt-[88px]	✅ scroll-mt-[100px]
+5. AI Analysis Section Structure (Block C Detail)
+Header bar
+
+Dark navy gradient (#0D1B2A → #0f2744)
+Sparkles icon + "FinCalc Smart AI Mortgage Analysis" title
+Download PDF (teal pill) + Email Results (ghost pill) — disabled, coming soon
+Health Score card
+
+SVG arc gauge: 240° sweep, 8 o'clock → 4 o'clock, gap at 6 o'clock bottom
+Score and /100 centered inside arc; hLabel ("Good") at arc gap bottom
+Color: green #1DB584 ≥65, amber #f59e0b ≥50, red #ef4444 <50
+Score computation: GDS points (0–40) + TDS points (0–40) + down payment bonus (0–20)
+Smart Optimization Found card
+
+Desktop: 3 boxes side-by-side — $interestSaved (flex-1) | $extra/mo | < 1 yr
+Mobile: $interestSaved full-width → labels → 2-col KPI grid
+Big number: clamp(2.1rem, 4vw, 2.85rem) desktop / clamp(1.9rem, 9vw, 2.4rem) mobile
+Supporting section (below hero)
+
+Left: Market Context (prose insight) + Affordability Ratios (GDS/TDS mini-panels with progress bars + status chips)
+Right: Expert Insights — Rate Shock (rose), Amortization Compression (sky), Insurance Threshold (emerald/amber)
+Footer
+
+ShieldAlert icon + disclaimer text on #f8fafb background
+6. Protected Files — Not Touched
+File	Reason
+components/layout/SiteHeader.tsx	Finalized master header
+components/layout/SiteFooter.tsx	Finalized master footer
+components/layout/CalculatorLayout.tsx	Master page wrapper
+lib/region/context.tsx	Global region state
+tailwind.config.ts	Brand token source of truth
+app/layout.tsx	Root HTML shell
+app/_mortgage-shared/math.ts	All financial formulas — sacred
+app/_mortgage-shared/ui.tsx	Shared UI primitives
+app/canadian-mortgage-calculator/page.tsx	Server component + SEO metadata
+7. Build Status
+✓ Compiled successfully
+✓ TypeScript — no errors
+✓ Lint — no warnings
+✓ All 6 routes static (○)
+/canadian-mortgage-calculator  120 kB first load JS
+8. Remaining Follow-Up Items
+Item	Status
+Apply Block C redesign to US Mortgage Calculator	Not started
+Homepage V2 foundation	Approved / locked
+Future homepage micro-polish	Deferred
+Mobile results-first reordering	Medium priority
+Download PDF functionality	Future
+Email Results functionality	Future
+"How It Works" collapsible subsections	Deferred
+Apply template to Mortgage Qualifier Calculator	Future
+9. What Must Not Be Changed Accidentally
+math.ts — semi-annual compounding formula (monthlyRateCA), calcPayment, buildSchedule, getCmhcRate are the financial source of truth
+id="expert-analysis" — scroll target used by "See How to Save" / "Unlock AI Analysis" buttons
+fmtCAD / fmtCADx — all monetary display must go through these formatters
+Health Score algorithm — GDS/TDS/DP scoring bands are calibrated, do not simplify
+IIFE pattern in Block C — introduces computed vars (hScore, GR, GARC, GFIL, rStatus) inside the conditional render; removing it breaks variable scope
+md:hidden / hidden md:flex split in Smart Opt card — mobile and desktop layouts are separate blocks; editing one does not affect the other
+useRegion() hook — region state (us / ca) is global; never hardcode region logic

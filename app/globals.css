@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden; /* iOS Safari: prevents horizontal scroll from child elements exceeding viewport */
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+/* ── AI Insights page animations ── */
+@media (prefers-reduced-motion: no-preference) {
+  .ais-line-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: aisLineDraw 1.6s cubic-bezier(0.4,0,0.2,1) 0.7s forwards;
+  }
+  @keyframes aisLineDraw {
+    to { stroke-dashoffset: 0; }
+  }
+  .ais-insight-card {
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+  }
+  .ais-insight-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 52px rgba(13,27,42,0.20) !important;
+  }
+  .ais-cta-outline {
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .ais-cta-outline:hover {
+    background: rgba(13,27,42,0.05);
+    border-color: rgba(13,27,42,0.32) !important;
+  }
+  /* Fade-up slide-in — used on floating Health Score card */
+  .ais-fade-up {
+    animation: aisFadeUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.5s both;
+  }
+  @keyframes aisFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+  /* SVG bar rise — transform-box makes origin relative to each rect */
+  .ais-bar-rise {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: aisBarRise 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes aisBarRise {
+    from { transform: scaleY(0); opacity: 0; }
+    to   { transform: scaleY(1); opacity: 1; }
+  }
+}
