@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
-import { GoogleAnalytics } from '@next/third-parties/google';
 import { RegionProvider } from '@/lib/region/context';
 import SiteHeader from '@/components/layout/SiteHeader';
 import SiteFooter from '@/components/layout/SiteFooter';
@@ -44,7 +43,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <SiteFooter />
         </RegionProvider>
-        <GoogleAnalytics gaId="G-PM9V6TB5QX" />
       </body>
     </html>
   );

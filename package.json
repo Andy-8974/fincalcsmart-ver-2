@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@next/third-parties": "15.5.20",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.14.0",
     "next": "15.5.20",
