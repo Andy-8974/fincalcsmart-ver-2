@@ -455,6 +455,32 @@ export default function SiteHeader() {
               </div>
             ))}
 
+            {/* Secondary links — AI Insights & Financial Guides */}
+            <div>
+              <Link
+                href="/ai-insights"
+                className="block rounded-xl transition-colors hover:bg-brand-teal/[0.06]"
+                onClick={() => setMobileOpen(false)}
+              >
+                <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+                  <span className="flex-1 text-[13.5px] font-medium" style={{ color: '#0F172A' }}>
+                    AI Insights
+                  </span>
+                </div>
+              </Link>
+              <Link
+                href="/guides"
+                className="block rounded-xl transition-colors hover:bg-brand-teal/[0.06]"
+                onClick={() => setMobileOpen(false)}
+              >
+                <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+                  <span className="flex-1 text-[13.5px] font-medium" style={{ color: '#0F172A' }}>
+                    Financial Guides
+                  </span>
+                </div>
+              </Link>
+            </div>
+
           </div>
 
           {/* ── Pinned bottom CTA ── */}
