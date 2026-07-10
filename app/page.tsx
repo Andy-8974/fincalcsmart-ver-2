@@ -28,6 +28,37 @@ export const metadata: Metadata = {
     'Estimate payments, compare scenarios, and understand your numbers with smart AI-assisted financial insights. Free calculators for mortgages, loans, retirement, and more.',
 };
 
+/* ── JSON-LD ────────────────────────────────────────────────── */
+
+const organizationWebsiteSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://www.fincalcsmart.com/#organization',
+      name: 'FinCalc Smart',
+      url: 'https://www.fincalcsmart.com',
+      description:
+        'FinCalc Smart provides free financial calculators and AI-assisted educational insights for mortgages, investing, retirement, taxes, loans, and personal finance in the United States and Canada.',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://www.fincalcsmart.com/#website',
+      name: 'FinCalc Smart',
+      url: 'https://www.fincalcsmart.com',
+      publisher: { '@id': 'https://www.fincalcsmart.com/#organization' },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://www.fincalcsmart.com/calculators?q={search_term_string}',
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+};
+
 function getWeekGroup(): WeekGroup {
   return (Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000)) % 4) as WeekGroup;
 }
@@ -332,6 +363,10 @@ export default function HomePage() {
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationWebsiteSchema) }}
+      />
       {/* ══════════════════════════════════════════════════════
           1. HERO
       ══════════════════════════════════════════════════════ */}
