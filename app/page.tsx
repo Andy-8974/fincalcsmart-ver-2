@@ -19,6 +19,7 @@ import HeroPreview from '@/components/home/HeroPreview';
 import CalcCard from '@/components/home/CalcCard';
 import InsightsShowcase, { type WeekGroup } from '@/components/home/InsightsShowcase';
 import AnalyticsSection from '@/components/home/AnalyticsSection';
+import RecentCalculatorsWidget from '@/components/home/RecentCalculatorsWidget';
 import { USFlagIcon, CAFlagIcon } from '@/components/ui/FlagIcons';
 
 
@@ -804,6 +805,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <RecentCalculatorsWidget />
     </main>
   );
 }

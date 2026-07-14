@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google';
 import { RegionProvider } from '@/lib/region/context';
 import SiteHeader from '@/components/layout/SiteHeader';
 import SiteFooter from '@/components/layout/SiteFooter';
+import RecentCalculatorsTracker from '@/components/RecentCalculatorsTracker';
 import './globals.css';
 
 const jakarta = Plus_Jakarta_Sans({
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin="anonymous"
         />
         <RegionProvider>
+          <RecentCalculatorsTracker />
           <SiteHeader />
           {children}
           <SiteFooter />
