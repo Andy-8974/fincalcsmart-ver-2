@@ -31,6 +31,13 @@ export function calcPayment(principal: number, rate: number, n: number): number 
   return (principal * rate * f) / (f - 1);
 }
 
+// CMHC homeowner mortgage-loan insurance eligibility ceiling.
+// Source: Canada Mortgage and Housing Corporation (CMHC) — effective December 15, 2024,
+// insured homeowner mortgages require a purchase price below CAD $1,500,000
+// (raised from the prior CAD $1,000,000 cap). Properties at or above this price
+// are not eligible for CMHC insurance and require a minimum 20% conventional down payment.
+export const CMHC_MAX_INSURABLE_PRICE = 1_500_000;
+
 export function getCmhcRate(downPct: number): number {
   if (downPct >= 20) return 0;
   if (downPct >= 15) return 0.028;

@@ -3,7 +3,7 @@
 import { useState, useMemo, type ReactNode } from 'react';
 import {
   monthlyRateCA, calcPayment, getCmhcRate, buildSchedule, parseN,
-  fmtCAD, fmtCADx, freqPayment, freqLabel,
+  fmtCAD, fmtCADx, freqPayment, freqLabel, CMHC_MAX_INSURABLE_PRICE,
   type Frequency, type ScheduleRow, type ScenarioData,
 } from '../_mortgage-shared/math';
 import {
@@ -20,7 +20,7 @@ import MobileCalcCTA from '@/components/ui/MobileCalcCTA';
 import {
   Sparkles, Download, Mail, Zap, TrendingUp, ShieldCheck, AlertTriangle,
   Globe, BarChart2, Star, DollarSign, Calendar, Thermometer, ShieldAlert,
-  Activity, Info, BookOpen, HelpCircle,
+  Activity, Info, BookOpen, HelpCircle, XCircle,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ interface Results {
 // ─── Tooltips ─────────────────────────────────────────────────────────────────
 
 const TOOLTIPS = {
-  homePrice: 'The total purchase price of the property. Homes over $1M require a minimum 20% down payment and are ineligible for CMHC insurance.',
+  homePrice: 'The total purchase price of the property. Homes priced at CA$1.5M or more require a minimum 20% down payment and are ineligible for CMHC mortgage-loan insurance (CMHC, effective Dec 15, 2024).',
   downPayment: 'Minimum 5% for homes under $500K. For $500K–$999,999: 5% on first $500K + 10% on remainder. 20%+ avoids CMHC insurance entirely.',
   interestRate: "Your lender's quoted annual rate. Canadian mortgages compound semi-annually by law (the Interest Act), not monthly — this calculator applies the correct conversion.",
   amortization: 'Maximum 25 years for CMHC-insured mortgages (under 20% down). Up to 30 years for uninsured mortgages (20%+ down) as of 2024 rule changes.',
@@ -152,6 +152,12 @@ export default function CanadaMortgageCalculator({
     if (homePrice <= 0 || dpAmt < 0 || rate <= 0 || dpAmt >= homePrice) return null;
 
     const downPct = (dpAmt / homePrice) * 100;
+
+    // CMHC mortgage-loan insurance is not available at or above this price — see
+    // CMHC_MAX_INSURABLE_PRICE in _mortgage-shared/math.ts. Below 20% down at this
+    // price point is not a valid conventional mortgage, so no result is computed.
+    if (homePrice >= CMHC_MAX_INSURABLE_PRICE && downPct < 20) return null;
+
     let loanAmount = homePrice - dpAmt;
     let cmhcAmount = 0;
 
@@ -363,6 +369,19 @@ export default function CanadaMortgageCalculator({
     return hp > 0 && dp >= hp;
   })();
 
+  // True when the price/down-payment combination is not eligible for CMHC
+  // insurance (homePrice >= CMHC_MAX_INSURABLE_PRICE with <20% down) — mirrors
+  // the gate inside the `results` memo, used here only to drive the UI message.
+  const priceIneligible = (() => {
+    const hp = parseN(form.homePrice);
+    const dp = form.downPaymentMode === 'amount'
+      ? parseN(form.downPayment)
+      : hp * (parseN(form.downPayment) / 100);
+    if (hp <= 0 || dp >= hp) return false;
+    const downPct = (dp / hp) * 100;
+    return hp >= CMHC_MAX_INSURABLE_PRICE && downPct < 20;
+  })();
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -444,6 +463,25 @@ export default function CanadaMortgageCalculator({
                           <span className="ml-2 font-medium" style={{ color: '#C9A84C' }}>· CMHC required</span>
                         )}
                       </p>
+                    )}
+                    {priceIneligible && (
+                      <div className="mt-2 rounded-xl p-3" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.20)' }}>
+                        <div className="flex gap-2 items-start">
+                          <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: '#EF4444' }} aria-hidden="true" />
+                          <p className="text-xs leading-relaxed" style={{ color: '#991B1B' }}>
+                            CMHC mortgage insurance is unavailable at CA$1.5M or more (CMHC, effective Dec 15, 2024). Increase your down payment to at least 20% to continue with a conventional mortgage.{' '}
+                            <a
+                              href="https://www.canada.ca/en/department-finance/news/2024/12/boldest-mortgage-reforms-in-decades-come-into-force-today.html"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline decoration-dotted underline-offset-2 hover:opacity-80"
+                              style={{ color: '#991B1B' }}
+                            >
+                              Source: Government of Canada
+                            </a>
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
 
@@ -682,8 +720,10 @@ export default function CanadaMortgageCalculator({
                 </div>
               ) : (
                 <div className="flex flex-1 items-center justify-center py-12">
-                  <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '14px', textAlign: 'center', lineHeight: 1.7 }}>
-                    {noMortgageNeeded
+                  <p style={{ color: priceIneligible ? '#f87171' : 'rgba(255,255,255,0.25)', fontSize: '14px', textAlign: 'center', lineHeight: 1.7 }}>
+                    {priceIneligible
+                      ? <>CMHC insurance unavailable at this price.<br />20% minimum down payment required.</>
+                      : noMortgageNeeded
                       ? <>No mortgage needed —<br />down payment covers full price.</>
                       : <>Enter your details<br />to see results.</>}
                   </p>
