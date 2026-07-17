@@ -1292,6 +1292,9 @@ export default function CanadaMortgageCalculator({
                           <Thermometer className="w-3 h-3 shrink-0 text-slate-400" aria-hidden="true" />
                           <p className="text-slate-400 text-xs italic">Heating est. $150/mo for GDS.</p>
                         </div>
+                        <p className="text-slate-400 text-xs italic mt-1 px-0.5">
+                          Estimated using your entered mortgage rate. Formal lender qualification may use a higher stress-test rate.
+                        </p>
                       </div>
                     )}
 

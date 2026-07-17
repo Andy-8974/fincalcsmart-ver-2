@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { type Faq } from '@/components/layout/CalculatorLayout';
 import CanadaMortgageCalculator from './CanadaMortgageCalculator';
 
@@ -22,7 +23,7 @@ const faqs: Faq[] = [
   {
     question: "How does Canada's mortgage stress test work?",
     answer:
-      'The federal B-20 guideline (OSFI) requires you to qualify at the higher of: (a) your contracted rate + 2%, or (b) the Bank of Canada\'s minimum qualifying rate (currently 5.25%). If a lender offers you 5.5%, you must prove you can afford payments at 7.5%. This applies to all federally regulated lenders regardless of down payment size.',
+      'The federal B-20 guideline (OSFI) requires you to qualify at the higher of: (a) your contracted rate + 2%, or (b) the Bank of Canada\'s minimum qualifying rate (currently 5.25%). If a lender offers you 5.5%, you must prove you can afford payments at 7.5%. This applies to all federally regulated lenders regardless of down payment size. This calculator uses your entered contract rate for its payment and GDS/TDS estimates — it does not apply the stress-test rate. For a formal, stress-tested qualification estimate, use the Mortgage Qualifier Calculator.',
   },
   {
     question: 'Can I use my RRSP or FHSA to buy a home?',
@@ -32,7 +33,7 @@ const faqs: Faq[] = [
   {
     question: 'What are GDS and TDS ratios, and why do they matter?',
     answer:
-      'The Gross Debt Service (GDS) ratio is your total monthly housing costs (P&I, property tax, heat, 50% of condo fees) divided by gross monthly income — lenders require GDS ≤ 32%. The Total Debt Service (TDS) ratio adds all other debts — lenders require TDS ≤ 44%. Staying below these ratios is required to qualify, but a GDS under 28% is the hallmark of a financially comfortable mortgage.',
+      "The Gross Debt Service (GDS) ratio is your total monthly housing costs (P&I, property tax, heat, 50% of condo fees) divided by gross monthly income — lenders require GDS ≤ 32%. The Total Debt Service (TDS) ratio adds all other debts — lenders require TDS ≤ 44%. This calculator estimates both ratios using the interest rate you enter above, so they are planning estimates rather than a lender's formal mortgage-qualification result — Canadian lenders may assess your application at the federal stress-test rate instead. A GDS under 28% is the hallmark of a financially comfortable mortgage.",
   },
 ];
 
@@ -123,6 +124,14 @@ const formulaSection = (
         The OSFI B-20 stress test requires you to qualify at the higher of: (a) contracted rate + 2%, or (b) 5.25%.
         If your lender offers 5.5%, you must prove you can afford 7.5% payments. This applies regardless of down
         payment size.
+      </p>
+      <p className="text-sm text-slate-600 leading-relaxed mb-4">
+        This calculator uses your entered contract rate for its payment, amortization, and GDS/TDS estimates — it
+        does not apply the stress-test rate above. For a formal, stress-tested view of how much you may qualify
+        for,{' '}
+        <Link href="/mortgage-qualifier-calculator" className="font-semibold hover:underline" style={{ color: '#1DB584' }}>
+          use the Mortgage Qualifier Calculator
+        </Link>.
       </p>
     </section>
 
