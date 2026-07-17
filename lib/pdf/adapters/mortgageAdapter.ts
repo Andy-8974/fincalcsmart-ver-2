@@ -650,7 +650,7 @@ export function buildUSMortgageReportData(
       rows: [
         { label: 'Mortgage Amount',                 value: fmt(input.loanAmount), accent: 'teal' },
         ...(input.monthlyPmi > 0
-          ? [{ label: 'PMI',                        value: `${fmtx(input.monthlyPmi)}/month${input.pmiRequiredUntilYear !== null ? ` · drops at 78% LTV (~yr ${input.pmiRequiredUntilYear})` : ''}`, accent: 'amber' as const }]
+          ? [{ label: 'PMI',                        value: `${fmtx(input.monthlyPmi)}/month${input.pmiRequiredUntilYear !== null ? ` · request cancellation at 80% LTV (~yr ${input.pmiRequiredUntilYear})` : ''}`, accent: 'amber' as const }]
           : []),
         { label: 'Base Monthly P&I Payment',        value: fmtx(input.baseMonthlyPI) + '/month' },
         { label: freqPaymentLabel(input.frequency), value: fmtx(input.displayPayment) },
@@ -683,7 +683,7 @@ export function buildUSMortgageReportData(
         );
       } else if (input.monthlyPmi > 0) {
         drivers.push(
-          `PMI of ${fmtx(input.monthlyPmi)}/month applies because your down payment is below 20%. PMI cancels automatically when your balance reaches 78% LTV${input.pmiRequiredUntilYear !== null ? ` (~year ${input.pmiRequiredUntilYear})` : ''}. Reaching 20% equity sooner allows a cancellation request under the Homeowners Protection Act.`
+          `PMI of ${fmtx(input.monthlyPmi)}/month applies because your down payment is below 20%. You may request cancellation once your balance reaches 80% of the original purchase price${input.pmiRequiredUntilYear !== null ? ` (~year ${input.pmiRequiredUntilYear})` : ''}; by law, PMI must automatically terminate at 78% LTV under the Homeowners Protection Act.`
         );
       }
 
@@ -718,7 +718,7 @@ export function buildUSMortgageReportData(
       whatItDoes: [
         'Uses standard US monthly compounding — divides the quoted annual rate by 12 to derive the monthly rate.',
         'Calculates the regular mortgage payment using the standard present-value annuity formula, then converts to bi-weekly or accelerated bi-weekly using the approved frequency multipliers.',
-        'Applies PMI when down payment is below 20%, calculated monthly as (loan amount × annual rate) ÷ 12, and cancelled automatically when the outstanding balance reaches 78% LTV per the Homeowners Protection Act.',
+        'Applies PMI when down payment is below 20%, calculated monthly as (loan amount × annual rate) ÷ 12; models borrower-requested cancellation once the outstanding balance reaches 80% of the original purchase price (automatic termination is required by law at 78% LTV under the Homeowners Protection Act).',
         'Builds a year-by-year amortization schedule with extra monthly payments applied directly to principal.',
       ],
       notModeled: [

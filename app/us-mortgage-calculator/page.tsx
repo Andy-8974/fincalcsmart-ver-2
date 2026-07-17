@@ -17,7 +17,7 @@ const faqs: Faq[] = [
   {
     question: 'What is PMI and when can I remove it?',
     answer:
-      "Private Mortgage Insurance protects your lender (not you) if you default. Under the federal Homeowners Protection Act (HPA), you can request PMI cancellation when your loan balance reaches 80% of the original purchase price, and it must be automatically terminated when the balance hits 78%. FHA loans have a different rule: MIP (Mortgage Insurance Premium) stays for the life of the loan if your down payment was under 10%.",
+      "Private Mortgage Insurance protects your lender (not you) if you default. Under the federal Homeowners Protection Act (HPA), you can request PMI cancellation when your loan balance reaches 80% of the original purchase price, and it must be automatically terminated when the balance hits 78%. FHA loans have a different rule: MIP (Mortgage Insurance Premium) stays for the life of the loan if your down payment was under 10%. This calculator uses the PMI rate you enter directly rather than deriving it from your credit score.",
   },
   {
     question: 'What is the difference between a conventional and FHA loan?',
@@ -27,12 +27,12 @@ const faqs: Faq[] = [
   {
     question: 'Is mortgage interest tax-deductible in the US?',
     answer:
-      "Yes, for loans originated after December 15, 2017, you can deduct interest on up to $750,000 of mortgage debt on your primary and secondary residence if you itemize deductions on Schedule A (Form 1040). The standard deduction ($14,600 for single filers in 2025) is now so high that most homeowners — especially early in their mortgage when interest is highest — benefit most from itemizing. Consult a tax advisor for your specific situation.",
+      "Yes, for loans originated after December 15, 2017, you can deduct interest on up to $750,000 of mortgage debt on your primary and secondary residence if you itemize deductions on Schedule A (Form 1040). The standard deduction ($16,100 for single filers in 2026, per IRS inflation adjustments) is now so high that most homeowners — especially early in their mortgage when interest is highest — benefit most from itemizing. Consult a tax advisor for your specific situation.",
   },
   {
     question: 'What is the 28/36 rule for affordability?',
     answer:
-      "The 28/36 rule is the classic affordability guideline: housing costs (principal, interest, taxes, insurance, PMI, HOA) should not exceed 28% of your gross monthly income. All debt payments (housing + car loans + student loans + credit cards) should not exceed 36%. Many Fannie Mae/Freddie Mac guidelines now allow up to 43–50% DTI for strong borrowers, but staying closer to 28/36 provides meaningful financial cushion.",
+      "The 28/36 rule is the classic affordability guideline: housing costs (principal, interest, taxes, insurance, PMI, HOA) should not exceed 28% of your gross monthly income. All debt payments (housing + car loans + student loans + credit cards) should not exceed 36%. Fannie Mae's Selling Guide caps manually underwritten loans at 36% DTI in general, extending up to 45% only when specific credit score and reserve requirements are met; loans run through Desktop Underwriter (DU) automated underwriting can reach up to 50% for well-qualified borrowers — but staying closer to 28/36 provides meaningful financial cushion.",
   },
 ];
 
@@ -65,12 +65,18 @@ const formulaSection = (
 
     <section>
       <h3 className="text-sm font-bold text-slate-800 mb-3 border-l-2 pl-3" style={{ borderColor: '#1DB584' }}>
-        Private Mortgage Insurance (PMI) — Full Rate Table
+        Private Mortgage Insurance (PMI) — Typical Market Rates (Reference Only)
       </h3>
       <p className="text-sm text-slate-600 leading-relaxed mb-4">
         PMI is required on conventional loans when your down payment is less than 20%. It protects your lender —
         not you — in the event of default. Under the <strong>Homeowners Protection Act (HPA)</strong>, PMI must be
-        automatically cancelled when your loan balance reaches 78% of the original purchase price.
+        automatically cancelled when your loan balance reaches 78% of the original purchase price, and you may
+        request cancellation once it reaches 80%.
+      </p>
+      <p className="text-sm text-slate-600 leading-relaxed mb-4">
+        This calculator uses the PMI rate you enter above — it does not calculate a rate from your credit score.
+        The table below shows typical market PMI pricing by credit tier for general reference only; your actual
+        rate depends on your lender, loan program, credit profile, and loan-to-value ratio.
       </p>
       <div
         className="mt-4 overflow-x-auto"
@@ -120,8 +126,10 @@ const formulaSection = (
         <li><strong>36% back-end ratio</strong> — All monthly debt payments (housing + car loans + student loans + credit cards) ≤ 36% of gross monthly income.</li>
       </ul>
       <p className="text-sm text-slate-600 leading-relaxed mt-3">
-        Modern Fannie Mae underwriting guidelines allow debt-to-income (DTI) ratios up to 45–50% for well-qualified
-        borrowers, but staying closer to 28/36 provides genuine financial security.
+        Fannie Mae's Selling Guide (B3-6-02) caps manually underwritten loans at 36% DTI in general, extending to
+        45% only when specific credit score and reserve requirements are met; loans run through Desktop Underwriter
+        (DU) automated underwriting can reach up to 50% for well-qualified borrowers — but staying closer to 28/36
+        provides genuine financial security.
       </p>
     </section>
 
@@ -149,7 +157,8 @@ const formulaSection = (
         US homeowners who itemize deductions on Schedule A can deduct mortgage interest paid on up to{' '}
         <strong>$750,000</strong> of mortgage debt on a primary or secondary residence (for loans originated after
         December 15, 2017; older loans have a $1M cap). The 2017 Tax Cuts and Jobs Act nearly doubled the standard
-        deduction ($14,600 single / $29,200 married filing jointly in 2025) — compare both to maximize your benefit.
+        deduction ($16,100 single / $32,200 married filing jointly in 2026, per IRS inflation adjustments) — compare
+        both to maximize your benefit.
       </p>
     </section>
 

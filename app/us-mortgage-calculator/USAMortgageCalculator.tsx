@@ -71,7 +71,7 @@ interface Results {
 // ─── Tooltips ─────────────────────────────────────────────────────────────────
 
 const TOOLTIPS = {
-  homePrice: 'The total purchase price of the property. Conforming loan limits for 2025 are $806,500 for most US counties; higher-cost areas may qualify for up to $1,209,750.',
+  homePrice: 'The total purchase price of the property. Conforming loan limits for 2026 are $832,750 for most US counties; higher-cost areas may qualify for up to $1,249,125 (per FHFA).',
   downPayment: 'Conventional loans: minimum 3% (with PMI) or 20% (no PMI). FHA loans: 3.5% minimum. VA/USDA loans: 0% down for eligible borrowers. Putting 20%+ down eliminates PMI entirely.',
   interestRate: 'The annual percentage rate (APR) from your lender. US mortgages use standard monthly compounding. The 30-year fixed rate is the most common product in the US market.',
   amortization: 'The 30-year fixed-rate mortgage is the US standard. 15-year mortgages have higher payments but much lower total interest. 20-year is a solid middle ground.',
@@ -611,7 +611,7 @@ export default function USAMortgageCalculator({
                           inputClassName={inputClsCompact}
                         />
                         <p className="mt-1 text-[10px]" style={{ color: '#b45309' }}>
-                          ≈ {fmtUSDx(results.monthlyPmi)}/mo · drops at 78% LTV
+                          ≈ {fmtUSDx(results.monthlyPmi)}/mo · request cancellation at 80% LTV
                           {results.pmiRequiredUntilYear ? ` (~yr ${results.pmiRequiredUntilYear})` : ''}
                         </p>
                       </div>
@@ -701,7 +701,7 @@ export default function USAMortgageCalculator({
                       </p>
                       {results.monthlyPmi > 0 && (
                         <p style={{ color: '#C9A84C', fontSize: '11.5px', fontWeight: 600, marginTop: 6 }}>
-                          Incl. {fmtUSDx(results.monthlyPmi)}/mo PMI · drops at 78% LTV
+                          Incl. {fmtUSDx(results.monthlyPmi)}/mo PMI · request cancellation at 80% LTV
                           {results.pmiRequiredUntilYear ? ` (~yr ${results.pmiRequiredUntilYear})` : ''}
                         </p>
                       )}
@@ -1449,9 +1449,10 @@ export default function USAMortgageCalculator({
                             </div>
                             <p className="text-sm text-slate-700">
                               Your {results.downPct.toFixed(1)}% down payment triggers PMI of{' '}
-                              <strong className="text-amber-600">{fmtUSDx(results.monthlyPmi)}/month</strong> — cancelled automatically at 78% LTV
-                              {results.pmiRequiredUntilYear ? ` (~year ${results.pmiRequiredUntilYear})` : ''}.
-                              Reach 20% equity to request early cancellation under the Homeowners Protection Act.
+                              <strong className="text-amber-600">{fmtUSDx(results.monthlyPmi)}/month</strong>. You may request
+                              cancellation once your balance reaches 80% of the original purchase price
+                              {results.pmiRequiredUntilYear ? ` (~year ${results.pmiRequiredUntilYear})` : ''}; by law, PMI
+                              must automatically terminate at 78% LTV under the Homeowners Protection Act.
                             </p>
                           </div>
                         )}
