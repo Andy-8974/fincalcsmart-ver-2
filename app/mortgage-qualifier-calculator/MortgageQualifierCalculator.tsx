@@ -90,8 +90,8 @@ const TOOLTIPS = {
   annualIncome: 'Gross annual income before taxes for the primary applicant. Include salary, self-employment, rental, and other regular sources.',
   coApplicantIncome: 'If applying with a partner or co-borrower, add their gross annual income to increase combined qualifying power.',
   annualRate: 'Your expected mortgage interest rate. In Canada, the B-20 stress test adds 2% on top of this rate when qualifying.',
-  amortization: 'Total repayment period. Maximum 25 years for insured mortgages (down < 20%). Up to 30 years for conventional (down ≥ 20%).',
-  downPayment: 'Cash toward the purchase. 20%+ down avoids CMHC insurance and raises your GDS limit from 32% to 39%.',
+  amortization: 'Total repayment period. Insured mortgages (down < 20%) are capped at 25 years, or up to 30 years for first-time buyers or new-construction purchases. Conventional mortgages (20%+ down) have no federal amortization cap, though 25–30 years is most common.',
+  downPayment: 'Cash toward the purchase. This calculator uses a 39% GDS / 44% TDS planning limit for all Canadian scenarios. Below 20% down, CMHC mortgage insurance applies, and 39%/44% are CMHC’s published qualification ratios. At 20%+ down, lender underwriting varies, so 39%/44% is used here as a conservative planning estimate rather than a guaranteed limit.',
   propertyTax: 'Estimated annual property tax on the home you plan to buy. Included in both GDS and TDS ratio calculations.',
   heatingCosts: 'Monthly heating and utility costs. For condos, include monthly maintenance fees. Included in GDS and TDS calculations.',
   carPayment: 'Monthly car loan or lease payments. Counted in TDS (total debt) ratio only.',
@@ -143,40 +143,13 @@ export default function MortgageQualifierCalculator({ formulaContent, faqItems }
     const totalMonthlyDebts = carPayment + creditCardMin + otherDebts;
 
     if (region === 'ca') {
-      // Source: OSFI Guideline B-20, CMHC Homeowner Mortgage Loan Insurance
+      // Source: OSFI Guideline B-20 (stress test); CMHC "Calculating GDS/TDS" (39% GDS / 44% TDS).
+      // A single 39%/44% planning limit is applied to all Canadian scenarios — see TOOLTIPS.downPayment
+      // and the formula-section copy for the insured-vs-conventional framing shown to users.
       const stressRate = Math.max(annualRate + 2, 5.25);
       const rStress    = monthlyRateCA(stressRate);
 
-      // First pass: assume conventional (39/44) to check insurance status
-      const maxGdsPI1 = (39 / 100) * monthlyIncome - monthlyTax - monthlyHeating;
-      const maxTdsPI1 = (44 / 100) * monthlyIncome - monthlyTax - monthlyHeating - totalMonthlyDebts;
-      const maxPI1    = Math.min(maxGdsPI1, maxTdsPI1);
-      if (maxPI1 <= 0) {
-        // Housing costs alone consume the full qualifying budget — no P&I room remains.
-        // Return a zero-capacity declined result so the UI stays visible.
-        const gdsLimitFb = 39; // matches the limit tested in this first pass
-        const tdsLimitFb = 44;
-        const gdsRatioFb = ((monthlyTax + monthlyHeating) / monthlyIncome) * 100;
-        const tdsRatioFb = ((monthlyTax + monthlyHeating + totalMonthlyDebts) / monthlyIncome) * 100;
-        return {
-          gdsRatio: gdsRatioFb, tdsRatio: tdsRatioFb,
-          gdsLimit: gdsLimitFb, tdsLimit: tdsLimitFb,
-          gdsPass: gdsRatioFb <= gdsLimitFb, tdsPass: tdsRatioFb <= tdsLimitFb,
-          maxMonthlyPayment: 0, maxMortgage: 0,
-          maxHomePrice: downPayment,
-          monthlyIncome, totalMonthlyDebts,
-          monthlyPI: 0, monthlyHousing: monthlyTax + monthlyHeating,
-          verdict: 'declined' as const,
-          verdictReason: 'Monthly housing costs exceed qualifying capacity. No mortgage qualifies under standard guidelines.',
-        };
-      }
-
-      const maxMortgage1 = maxPI1 * (1 - Math.pow(1 + rStress, -n)) / rStress;
-      const downPct1     = downPayment / (maxMortgage1 + downPayment) * 100;
-      const isInsured1   = downPct1 < 20;
-
-      // Second pass with correct GDS limit
-      const gdsLimit = isInsured1 ? 32 : 39;
+      const gdsLimit = 39;
       const tdsLimit = 44;
 
       const maxGdsPI = (gdsLimit / 100) * monthlyIncome - monthlyTax - monthlyHeating;
@@ -236,7 +209,10 @@ export default function MortgageQualifierCalculator({ formulaContent, faqItems }
       };
 
     } else {
-      // Source: Consumer Financial Protection Bureau (CFPB) 28/36 qualification guidelines
+      // Source: Conventional mortgage industry underwriting guidelines — 28% front-end is a
+      // widely used industry rule of thumb; 36% back-end matches Fannie Mae/Freddie Mac Selling
+      // Guide manual-underwriting DTI limits. Not a CFPB rule (CFPB's ATR/QM rule uses a
+      // different, price-based framework with no fixed 28/36 test).
       const r        = monthlyRateUS(annualRate);
       const gdsLimit = 28;
       const tdsLimit = 36;
@@ -356,6 +332,10 @@ export default function MortgageQualifierCalculator({ formulaContent, faqItems }
   const displayGdsPass = results ? Math.round(results.gdsRatio * 10) / 10 <= results.gdsLimit : false;
   const displayTdsPass = results ? Math.round(results.tdsRatio * 10) / 10 <= results.tdsLimit : false;
   const displayVerdict: Results['verdict'] | null = !results ? null
+    // Zero qualifying capacity (housing + debts alone exceed the limit) is always a hard decline —
+    // never "borderline," regardless of how close the ratio sits to the limit.
+    : results.maxMortgage <= 0
+      ? 'declined'
     : displayGdsPass && displayTdsPass
       ? 'approved'
       : (!displayGdsPass && results.gdsRatio < results.gdsLimit + 5) || (!displayTdsPass && results.tdsRatio < results.tdsLimit + 5)
@@ -1287,10 +1267,10 @@ export default function MortgageQualifierCalculator({ formulaContent, faqItems }
                       <p className="text-xs font-bold uppercase tracking-widest text-amber-600">Rate Sensitivity</p>
                     </div>
                     <p className="text-sm font-semibold mb-1" style={{ color: '#0D1B2A' }}>
-                      +1% rate ≈ 8–10% less qualifying power
+                      +1% rate typically ≈ 8–10% less qualifying power
                     </p>
                     <p className="text-xs leading-relaxed" style={{ color: '#4B5563' }}>
-                      At {parseFloat(form.annualRate).toFixed(2)}%, each 1% increase meaningfully reduces qualifying power. A fixed rate locks in your qualification basis.
+                      Illustrative industry range at {parseFloat(form.annualRate).toFixed(2)}% — each 1% rate increase meaningfully reduces qualifying power. A fixed rate locks in your qualification basis.
                     </p>
                   </div>
                 )}

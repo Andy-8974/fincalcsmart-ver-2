@@ -3,14 +3,14 @@ import { type Faq } from '@/components/layout/CalculatorLayout';
 import MortgageQualifierCalculator from './MortgageQualifierCalculator';
 
 export const metadata: Metadata = {
-  title: 'Mortgage Qualifier Calculator 2025 — Canada & USA',
+  title: 'Mortgage Qualifier Calculator 2026 — Canada & USA',
   description:
     'Find out how much mortgage you qualify for in Canada or the USA. Instant GDS/TDS and 28/36 ratio analysis with B-20 stress test. No sign-up.',
   alternates: {
     canonical: 'https://fincalcsmart.com/mortgage-qualifier-calculator',
   },
   openGraph: {
-    title: 'Mortgage Qualifier Calculator 2025 — Canada & USA',
+    title: 'Mortgage Qualifier Calculator 2026 — Canada & USA',
     description:
       'Find out how much mortgage you qualify for in Canada or the USA. Instant GDS/TDS and 28/36 ratio analysis with B-20 stress test.',
     url: 'https://fincalcsmart.com/mortgage-qualifier-calculator',
@@ -23,7 +23,7 @@ const faqs: Faq[] = [
   {
     question: 'What is a GDS ratio?',
     answer:
-      'The Gross Debt Service (GDS) ratio is the percentage of your gross monthly income required to cover housing costs — principal and interest, property tax, heating costs, and 50% of condo fees if applicable. Canadian lenders cap GDS at 32% for insured mortgages (less than 20% down) and up to 39% for conventional mortgages. Staying below 28% is generally considered financially comfortable.',
+      'The Gross Debt Service (GDS) ratio is the percentage of your gross monthly income required to cover housing costs — principal and interest, property tax, heating costs, and 50% of condo fees if applicable. This calculator applies a 39% GDS planning limit to all Canadian scenarios: for insured mortgages (less than 20% down), 39% matches CMHC’s published qualification ratio; for conventional mortgages (20%+ down), lender underwriting varies, so 39% is used as a conservative estimate. Staying below 28% is generally considered financially comfortable.',
   },
   {
     question: 'What is a TDS ratio?',
@@ -43,7 +43,7 @@ const faqs: Faq[] = [
   {
     question: 'How is the maximum mortgage calculated?',
     answer:
-      'This calculator works backwards from your income and debts using an inverse amortization formula. First, it determines your maximum allowable monthly payment by multiplying gross monthly income by the applicable ratio limit (32% GDS or 44% TDS for Canada; 28% or 36% for the USA), then subtracting taxes, heating, and other debts. In Canada, the stress-tested rate is used for this reverse calculation, then the contract rate is applied to find the actual mortgage principal you can carry.',
+      'This calculator works backwards from your income and debts using an inverse amortization formula. First, it determines your maximum allowable monthly payment by multiplying gross monthly income by the applicable ratio limit (39% GDS or 44% TDS for Canada; 28% or 36% for the USA), then subtracting taxes, heating, and other debts. In Canada, the stress-tested rate is used for this reverse calculation, then the contract rate is applied to find the actual mortgage principal you can carry.',
   },
   {
     question: 'How does qualifying differ between Canada and the USA?',
@@ -82,8 +82,10 @@ const formulaSection = (
         </div>
       </div>
       <p className="text-sm text-slate-600 leading-relaxed mb-4">
-        GDS limit: 32% (insured, &lt;20% down) · 39% (conventional). TDS limit: 44% for all borrowers.
-        Semi-annual compounding applies per the Canadian <em>Interest Act</em>.
+        This calculator uses a 39% GDS and 44% TDS planning limit for Canadian scenarios. For insured mortgages
+        (&lt;20% down), these match CMHC&rsquo;s published qualification ratios. For uninsured mortgages (20%+ down),
+        actual lender underwriting may differ, so the same 39%/44% is applied here as a conservative planning
+        estimate rather than a guaranteed limit. Semi-annual compounding applies per the Canadian <em>Interest Act</em>.
       </p>
     </section>
 
@@ -106,7 +108,8 @@ const formulaSection = (
       </div>
       <p className="text-sm text-slate-600 leading-relaxed mb-4">
         Where P&amp;I is the principal and interest payment at the contract rate with monthly compounding.
-        FHA loans allow up to 31% / 43%; VA loans can exceed 41% back-end with residual income.
+        Per HUD Handbook 4000.1, FHA loans allow up to 31% / 43% (higher with compensating factors); per VA
+        guidance, VA loans have no hard DTI ceiling, but ratios above 41% back-end require stronger residual income.
       </p>
     </section>
 
@@ -154,7 +157,7 @@ const formulaSection = (
           <tbody style={{ borderTop: '1px solid #E4E9EF' }}>
             <tr style={{ borderBottom: '1px solid #F1F4F7' }}>
               <td className="px-4 py-2.5 text-sm text-slate-600">Housing ratio</td>
-              <td className="px-4 py-2.5 text-sm text-slate-700">GDS ≤ 32% / 39%</td>
+              <td className="px-4 py-2.5 text-sm text-slate-700">GDS ≤ 39%</td>
               <td className="px-4 py-2.5 text-sm text-slate-700">Front-end ≤ 28%</td>
             </tr>
             <tr style={{ borderBottom: '1px solid #F1F4F7' }}>

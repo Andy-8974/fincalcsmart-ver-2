@@ -18,7 +18,7 @@ export interface MortgageQualifierAdapterInput {
   // Results
   gdsRatio:            number;   // %
   tdsRatio:            number;   // %
-  gdsLimit:            number;   // % (CA: 32 or 39; US: 28)
+  gdsLimit:            number;   // % (CA: 39; US: 28)
   tdsLimit:            number;   // % (CA: 44; US: 36)
   gdsPass:             boolean;
   tdsPass:             boolean;
@@ -90,10 +90,10 @@ export function buildMortgageQualifierReportData(
 
   // ── Insight paragraphs ────────────────────────────────────────────────────
   const p1 = input.verdict === 'approved'
-    ? `Based on combined gross annual income of ${fmt(input.annualIncome + input.coApplicantIncome)} and a ${input.annualRate}% mortgage rate over ${input.amortization} years, this scenario qualifies under standard ${region === 'ca' ? 'B-20 GDS/TDS' : '28/36 CFPB'} guidelines. Your ${ratioLabel} ratios are ${input.gdsRatio.toFixed(1)}% / ${input.tdsRatio.toFixed(1)}% against limits of ${input.gdsLimit}% / ${input.tdsLimit}%.${stressNote}`
+    ? `Based on combined gross annual income of ${fmt(input.annualIncome + input.coApplicantIncome)} and a ${input.annualRate}% mortgage rate over ${input.amortization} years, this scenario qualifies under standard ${region === 'ca' ? 'B-20 GDS/TDS' : 'conventional 28/36 DTI'} guidelines. Your ${ratioLabel} ratios are ${input.gdsRatio.toFixed(1)}% / ${input.tdsRatio.toFixed(1)}% against limits of ${input.gdsLimit}% / ${input.tdsLimit}%.${stressNote}`
     : input.verdict === 'borderline'
-    ? `Based on combined gross annual income of ${fmt(input.annualIncome + input.coApplicantIncome)}, this scenario is borderline -- close to the ${region === 'ca' ? 'B-20 GDS/TDS' : '28/36 CFPB'} limits. Your ${ratioLabel} ratios are ${input.gdsRatio.toFixed(1)}% / ${input.tdsRatio.toFixed(1)}% against limits of ${input.gdsLimit}% / ${input.tdsLimit}%.${stressNote} A lender may approve with compensating factors such as a larger down payment or lower existing debts.`
-    : `Based on combined gross annual income of ${fmt(input.annualIncome + input.coApplicantIncome)}, this scenario does not qualify under standard ${region === 'ca' ? 'B-20 GDS/TDS' : '28/36 CFPB'} guidelines. Your ${ratioLabel} ratios are ${input.gdsRatio.toFixed(1)}% / ${input.tdsRatio.toFixed(1)}% against limits of ${input.gdsLimit}% / ${input.tdsLimit}%.${stressNote}`;
+    ? `Based on combined gross annual income of ${fmt(input.annualIncome + input.coApplicantIncome)}, this scenario is borderline -- close to the ${region === 'ca' ? 'B-20 GDS/TDS' : 'conventional 28/36 DTI'} limits. Your ${ratioLabel} ratios are ${input.gdsRatio.toFixed(1)}% / ${input.tdsRatio.toFixed(1)}% against limits of ${input.gdsLimit}% / ${input.tdsLimit}%.${stressNote} A lender may approve with compensating factors such as a larger down payment or lower existing debts.`
+    : `Based on combined gross annual income of ${fmt(input.annualIncome + input.coApplicantIncome)}, this scenario does not qualify under standard ${region === 'ca' ? 'B-20 GDS/TDS' : 'conventional 28/36 DTI'} guidelines. Your ${ratioLabel} ratios are ${input.gdsRatio.toFixed(1)}% / ${input.tdsRatio.toFixed(1)}% against limits of ${input.gdsLimit}% / ${input.tdsLimit}%.${stressNote}`;
 
   const p2 = `Your maximum estimated mortgage qualifying amount is ${fmt(input.maxMortgage)}, resulting in a maximum estimated home price of ${fmt(input.maxHomePrice)} with a ${fmt(input.downPayment)} down payment. Estimated monthly principal and interest: ${fmtx(input.monthlyPI)}/month. Total monthly housing costs (P&I + tax + heating): ${fmtx(input.monthlyHousing)}/month.`;
 
@@ -104,10 +104,11 @@ export function buildMortgageQualifierReportData(
   const p3 = `${improvePath} This is an estimated qualifying capacity based on the inputs provided. Actual mortgage qualification depends on your credit score, employment history, property type, and lender-specific underwriting criteria not modeled here.`;
 
   // ── Key drivers ───────────────────────────────────────────────────────────
+  const downPct = (input.downPayment / (input.maxHomePrice || 1)) * 100;
   const keyDrivers = [
     `GDS ratio (${input.gdsRatio.toFixed(1)}% vs ${input.gdsLimit}% limit): Driven by your monthly housing costs of ${fmtx(input.monthlyHousing)}. Reducing property tax assumptions or interest rate reduces GDS.`,
     `TDS ratio (${input.tdsRatio.toFixed(1)}% vs ${input.tdsLimit}% limit): Driven by monthly housing costs plus ${fmt(input.totalMonthlyDebts)} in other monthly debts. Paying off a car loan or credit card before applying materially improves TDS.`,
-    `Down payment of ${fmt(input.downPayment)} (${((input.downPayment / (input.maxHomePrice || 1)) * 100).toFixed(1)}% of max home price) ${region === 'ca' && input.gdsLimit === 32 ? 'is below 20% -- CMHC insurance applies and the GDS limit is 32% rather than 39%. A 20%+ down payment raises the GDS limit to 39%.' : 'is at or above 20% -- conventional (uninsured) mortgage limits apply.'}`
+    `Down payment of ${fmt(input.downPayment)} (${downPct.toFixed(1)}% of max home price) ${region === 'ca' ? (downPct < 20 ? 'is below 20% -- CMHC mortgage insurance applies; the 39% GDS / 44% TDS limits used here match CMHC’s published qualification ratios.' : 'is at or above 20% -- CMHC insurance is not required; the same 39% GDS / 44% TDS limits are applied here as a conservative planning estimate, since actual uninsured-lender underwriting may differ.') : 'is at or above 20% -- conventional (uninsured) mortgage limits apply.'}`
   ];
 
   // ── Assemble ReportData ───────────────────────────────────────────────────
@@ -189,8 +190,8 @@ export function buildMortgageQualifierReportData(
     methodology: {
       whatItDoes: [
         region === 'ca'
-          ? 'Applies OSFI B-20 GDS/TDS guidelines. Canada: qualifying rate is the higher of contract rate +2% or 5.25% (stress test). GDS limit is 32% when down payment is below 20% (insured), 39% otherwise. TDS limit is 44%.'
-          : 'Applies CFPB 28/36 front-end/back-end DTI guidelines. Front-end (housing ratio) limit: 28%. Back-end (total debt) limit: 36%. No stress test applied for the US.',
+          ? 'Applies OSFI B-20 GDS/TDS guidelines. Canada: qualifying rate is the higher of contract rate +2% or 5.25% (stress test). Uses a 39% GDS / 44% TDS planning limit for all scenarios -- for insured mortgages (down payment below 20%), these match CMHC’s published qualification ratios; for uninsured mortgages, actual lender underwriting may differ, so the same limits are applied as a conservative estimate.'
+          : 'Applies conventional mortgage industry 28/36 front-end/back-end DTI guidelines (28% front-end is a common industry rule of thumb; 36% back-end matches Fannie Mae/Freddie Mac Selling Guide manual-underwriting limits). Front-end (housing ratio) limit: 28%. Back-end (total debt) limit: 36%. No stress test applied for the US.',
         'Solves for the maximum mortgage principal whose stress-test (CA) or contract-rate (US) P&I payment satisfies both ratio limits simultaneously.',
         'Maximum home price equals maximum mortgage plus down payment. Monthly P&I shown at contract rate for payment planning purposes.',
       ],
@@ -206,7 +207,7 @@ export function buildMortgageQualifierReportData(
 
     disclaimer: region === 'ca'
       ? 'This report is for educational and illustrative purposes only and applies OSFI B-20 stress-test guidelines as documented at the time of this calculator build. Actual mortgage qualification depends on your lender, credit score, property type, and current regulatory requirements. This does not constitute mortgage, financial, or legal advice. Verify qualification with a licensed mortgage professional or your financial institution.'
-      : 'This report is for educational and illustrative purposes only and applies CFPB 28/36 qualification guidelines. Actual mortgage qualification depends on your lender, credit score, loan type, and current regulatory requirements. This does not constitute mortgage, financial, or legal advice. Verify qualification with a licensed mortgage professional or your financial institution.',
+      : 'This report is for educational and illustrative purposes only and applies conventional mortgage industry 28/36 qualification guidelines. Actual mortgage qualification depends on your lender, credit score, loan type, and current regulatory requirements. This does not constitute mortgage, financial, or legal advice. Verify qualification with a licensed mortgage professional or your financial institution.',
   };
 
   const filename = `fincalc-smart-mortgage-qualifier-report-${dateFile}.pdf`;
