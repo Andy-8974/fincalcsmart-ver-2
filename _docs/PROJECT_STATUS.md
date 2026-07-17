@@ -1,6 +1,6 @@
 # FinCalc Smart V2 — Project Status & Roadmap
 
-> Last updated: 2026-06-19 — About / Privacy / Terms / Sitemap pages added for soft launch · footer updated with all 4 legal links · DonutChart SVG hydration mismatch fixed (r6 rounding) · tsc clean · next build clean (39 pages)
+> Last updated: 2026-07-16 — Post-Launch Platform Foundation (July 2026) recorded: XML sitemap, robots.txt, canonical domain redirect, homepage structured data foundation, mobile navigation update, Continue Planning V1, Project Vision Alignment, and Platform Documentation. Master Roadmap V2 is maintained externally by Andrew and governs current priorities and sequencing; this file remains the durable in-repository record of completed and locked work. See "Post-Launch Platform Foundation — July 2026" below.
 
 ---
 
@@ -1805,6 +1805,28 @@ These require new adapters or significant adapter logic beyond family reuse.
 All 24 public calculators now have PDF adapters or confirmed no-button status (sales-tax-calculator has no AI panel). Rollout is complete. No remaining PDF adapter work unless a new calculator is added.
 
 **Adapters locked:** retirementAdapter · savingsGoalAdapter · mortgageAdapter (CA+US) · investmentGrowthAdapter · investmentFeesAdapter · roiAdapter · loanAdapter · taxIncomeAdapter · withdrawalAdapter · fireAdapter · canadaRegisteredAdapter · mortgageQualifierAdapter · mortgageRefinanceAdapter · debtRepaymentAdapter · taxAdapter · salesTaxAdapter · emergencyFundAdapter · netWorthAdapter · rentVsBuyAdapter · lumpSumVsDcaAdapter · cmhcAdapter
+
+---
+
+## Post-Launch Platform Foundation — July 2026
+
+> Master Roadmap V2 is maintained externally by Andrew and governs current priorities and sequencing. It is not stored in this repository. `PROJECT_STATUS.md` is the durable in-repository record of completed and locked work and must not be treated as the active roadmap. At the end of every future Platform Foundation task, `PROJECT_STATUS.md` must be updated after live QA and final PASS. Future or unapproved tasks must not be added here as though they are active work.
+
+Status legend used below: **COMPLETE** — implemented and verified. **LOCKED** — implemented, QA-approved, and not open for casual changes. **PARTIALLY COMPLETE** — a valid foundation exists, but a wider audit or implementation remains. **PAUSED** — intentionally not active.
+
+| Item | Status | Details |
+|------|--------|---------|
+| XML Sitemap | ✅ COMPLETE | `app/sitemap.ts` implemented; production sitemap live; includes core static routes, guides, and calculator routes; submitted to Google Search Console. |
+| robots.txt | ✅ COMPLETE | `app/robots.ts` implemented; allows public crawling; references the production XML sitemap. |
+| Canonical Domain Redirect | ✅ COMPLETE | Non-www domain permanently redirects to the canonical production domain `https://www.fincalcsmart.com`; path and query strings preserved. Page-level canonical tags and hreflang have not been audited. |
+| Homepage Structured Data Foundation | 🟡 PARTIALLY COMPLETE | Organization, WebSite, and SearchAction schema implemented on the homepage. Calculator-level, guide-level, and platform-wide structured data have not yet received the planned dedicated audit. |
+| Mobile Navigation Update | ✅ COMPLETE / LOCKED | AI Insights and Financial Guides added to the mobile drawer; production verification completed. |
+| Continue Planning V1 | ✅ COMPLETE / LOCKED | Recent calculator usage stored locally; homepage Continue Planning widget shows up to five recently used calculators; first-visit auto-expand; collapsed pill remains after dismissal; production verification completed. This is a returning-user experience foundation, not a saved-account or cloud workspace system. |
+| Project Vision Alignment | ✅ COMPLETE / LOCKED | All project participants (Andrew, ChatGPT, Claude, and external review via Gemini) aligned on the long-term vision: "Build the most trusted AI-assisted personal financial platform for everyday people." Establishes the permanent philosophy guiding all future implementation decisions. See `PROJECT_VISION.md`. |
+| Google Analytics | ⏸ PAUSED | Previous GA implementation attempt was rolled back; no active GA implementation is currently present; work remains paused pending a safe implementation plan. |
+| Platform Documentation | ✅ COMPLETE — DOCUMENTATION FOUNDATION | `PROJECT_VISION.md` created; `PROJECT_STATUS.md` is the durable completion-history document. Master Roadmap V2 remains external, maintained by Andrew, and is not stored in this repository. |
+
+Common PDF Download V1 remains recorded in its original entry above (`Common PDF Download V1 — COMPLETE (2026-06-19)`) — status unchanged and consistent with this Platform Foundation record; not duplicated here.
 
 ---
 

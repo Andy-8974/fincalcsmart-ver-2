@@ -2,6 +2,8 @@
 
 > **Auto-loaded by Claude Code on every session.** All agents must read and comply with every rule here before touching any file.
 
+> **Before any product, IA, UX, SEO, or architecture decision where the right path isn't obvious, read `_docs/PROJECT_VISION.md` first.** It defines the long-term vision and philosophy of FinCalc Smart and changes rarely — CLAUDE.md governs *how* to implement, PROJECT_VISION.md governs *why* and *toward what end*.
+
 ---
 
 ## 1. Project Identity
@@ -103,6 +105,7 @@ Full rules in `_docs/AGENT_MANUAL.md §3`.
 
 ## 5. Quick References
 
+- Long-term vision & philosophy (core doc) → `_docs/PROJECT_VISION.md`
 - Brand colors → `_docs/BRAND_GUIDELINES.md`
 - Full agent manual → `_docs/AGENT_MANUAL.md`
 - Pre-launch checklist → `_docs/AGENT_READINESS_CHECKLIST.md`
