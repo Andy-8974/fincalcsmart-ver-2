@@ -199,7 +199,7 @@ export function buildCmhcReportData(
         'Total insured mortgage = base mortgage + CMHC premium. The premium is added to the principal and amortized over the loan term.',
       ],
       notModeled: [
-        'PST on CMHC premium (applies in Ontario, Manitoba, and Quebec -- paid separately at closing, not financed).',
+        'Provincial sales tax that may apply to the CMHC premium (CMHC currently identifies Ontario, Quebec and Saskatchewan; confirm current treatment with your lender or insurer) -- paid separately at closing, not financed.',
         'Monthly mortgage payment (P+I) -- use the mortgage calculator with the total insured mortgage as the principal.',
         'CMHC First Home Buyer Incentive or any government shared-equity programs.',
         'Lender-specific rate differences between insured and conventional mortgages.',

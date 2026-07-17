@@ -3,7 +3,7 @@ import { type Faq } from '@/components/layout/CalculatorLayout';
 import CMHCInsuranceCalculator from './CMHCInsuranceCalculator';
 
 export const metadata: Metadata = {
-  title: 'CMHC Mortgage Insurance Calculator 2025 | Premium Estimator',
+  title: 'CMHC Mortgage Insurance Calculator 2026 | Premium Estimator',
   description:
     'Estimate your CMHC mortgage default insurance premium for Canadian home purchases. See down payment thresholds, premium rates, and next-threshold savings — Canada only.',
 };
@@ -32,12 +32,12 @@ const faqs: Faq[] = [
   {
     question: 'Can I get a 30-year amortization with a CMHC-insured mortgage?',
     answer:
-      'As of August 2024, CMHC allows 30-year amortization on insured mortgages only for first-time homebuyers or buyers purchasing a newly constructed home that has not previously been occupied as a principal residence. All other insured mortgage borrowers are limited to a 25-year maximum amortization.',
+      'As of December 15, 2024, CMHC allows 30-year amortization on insured mortgages when the borrower is a first-time homebuyer (has not owned and occupied a home as a principal residence in the last 4 years) or is purchasing a newly constructed home that has not previously been occupied for residential purposes. All other insured mortgage borrowers are limited to a 25-year maximum amortization.',
   },
   {
     question: 'Does CMHC insurance include provincial sales tax?',
     answer:
-      'The CMHC premium itself does not include provincial sales tax, but Ontario, Quebec, Manitoba, and Saskatchewan apply provincial tax to the CMHC premium at closing. This tax is not added to the mortgage — it must be paid upfront. This calculator does not include provincial PST in its estimates.',
+      'Provincial sales tax may apply to the mortgage insurance premium. CMHC currently identifies Ontario, Quebec and Saskatchewan on its premium information page. The tax cannot be added to the mortgage — it must be paid upfront — and provincial tax treatment can vary by insurer or change over time, so confirm current treatment with your lender or insurer. This calculator does not include provincial PST in its estimates.',
   },
 ];
 
@@ -122,7 +122,7 @@ const formulaSection = (
         30-Year Amortization — Eligibility
       </h3>
       <p className="text-sm text-slate-600 leading-relaxed">
-        As of August 2024, CMHC-insured mortgages may have an amortization of up to 30 years, but only when the borrower is a first-time homebuyer <em>or</em> is purchasing a newly constructed home. Without one of these conditions, the maximum insured amortization is 25 years. Conventional mortgages (20%+ down) are not subject to this restriction.
+        As of December 15, 2024, CMHC-insured mortgages may have an amortization of up to 30 years when the borrower is a first-time homebuyer <em>or</em> is purchasing a newly constructed home. Without one of these conditions, the maximum insured amortization is 25 years. Conventional mortgages (20%+ down) are not subject to this restriction.
       </p>
     </section>
   </div>

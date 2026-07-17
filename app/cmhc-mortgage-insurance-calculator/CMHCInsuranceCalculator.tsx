@@ -89,8 +89,8 @@ const TOOLTIPS = {
   purchasePrice: 'The total purchase price of the property. Homes priced at $1.5M or more are not eligible for CMHC mortgage insurance — a minimum 20% conventional down payment is required.',
   downPayment: 'Minimum 5% for homes under $500K. For $500K–$1,499,999: 5% on first $500K + 10% on the remainder. 20%+ avoids CMHC insurance entirely.',
   amortization: '30-year amortization is available for CMHC-insured mortgages only when the borrower is a first-time homebuyer or purchasing a new build, per CMHC guidelines.',
-  firstTimeBuyer: "You have not previously owned a home that was your principal place of residence. Required (with or without new build) to access 30-year insured amortization.",
-  newBuild: 'A newly constructed home that has not previously been occupied as a principal residence.',
+  firstTimeBuyer: "You have not owned and occupied a home as your principal residence in the last 4 years (or you recently experienced a marriage/common-law relationship breakdown). Required (with or without new build) to access 30-year insured amortization.",
+  newBuild: 'A newly constructed home that has not previously been occupied for residential purposes (interim occupancy during condo construction does not disqualify it).',
 };
 
 // ── Status config ──────────────────────────────────────────────────────────────
@@ -1184,7 +1184,7 @@ export default function CMHCInsuranceCalculator({
             style={{ borderTop: '1px solid rgba(15,41,66,0.07)', background: '#f8fafb' }}>
             <ShieldAlert className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" aria-hidden />
             <p className="text-slate-400 text-xs leading-relaxed">
-              <strong className="text-slate-500 font-semibold">Canada only. Estimates only.</strong> Results are based on the purchase price and down payment entered, using current displayed CMHC premium rates. Not included: provincial sales tax on the CMHC premium (ON, QC, MB, SK); lender underwriting; affordability qualification; interest rates; closing costs. Verify with your lender or CMHC before making financial decisions.
+              <strong className="text-slate-500 font-semibold">Canada only. Estimates only.</strong> Results are based on the purchase price and down payment entered, using current displayed CMHC premium rates. Not included: provincial sales tax that may apply to the CMHC premium (CMHC currently identifies Ontario, Quebec and Saskatchewan — confirm current treatment with your lender or insurer); lender underwriting; affordability qualification; interest rates; closing costs. Verify with your lender or CMHC before making financial decisions.
             </p>
           </div>
 
