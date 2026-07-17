@@ -542,16 +542,20 @@ export default function MortgageQualifierCalculator({ formulaContent, faqItems }
         tdsRatio:           results.tdsRatio,
         gdsLimit:           results.gdsLimit,
         tdsLimit:           results.tdsLimit,
-        gdsPass:            results.gdsPass,
-        tdsPass:            results.tdsPass,
+        gdsPass:            displayGdsPass,
+        tdsPass:            displayTdsPass,
         maxMortgage:        results.maxMortgage,
         maxHomePrice:       results.maxHomePrice,
         monthlyIncome:      results.monthlyIncome,
         totalMonthlyDebts:  results.totalMonthlyDebts,
         monthlyPI:          results.monthlyPI,
         monthlyHousing:     results.monthlyHousing,
-        verdict:            results.verdict,
-        verdictReason:      results.verdictReason,
+        // Use the 1dp-rounded display verdict (same value the top banner and Verdict card show),
+        // not the raw results.verdict — raw ratios can sit a hair over the limit from floating-point
+        // residue in the reverse-amortization solve even when the rounded, user-facing ratio is exactly
+        // at the limit. This keeps the PDF's verdict identical to what the live UI displays.
+        verdict:            displayVerdict ?? results.verdict,
+        verdictReason:      displayVerdictReason,
         region,
       });
     } catch (e) {
