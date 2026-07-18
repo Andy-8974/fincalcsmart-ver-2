@@ -21,7 +21,7 @@ const faqItems: Array<{ question: string; answer: string }> = [
   {
     question: 'What is the Retirement Readiness Score?',
     answer:
-      'The Retirement Readiness Score (0–100) summarises your overall retirement trajectory based on your goal progress, years remaining until retirement, and whether your current contributions are sufficient. A score of 80+ is Excellent; 65–79 is Good; 45–64 is Fair; below 45 is Poor. The score is a directional indicator only — it does not account for inflation, taxes, fees, pension income, or spending needs in retirement.',
+      'The Retirement Readiness Score (0–100) summarises your overall retirement trajectory based on your goal progress, years remaining until retirement, and whether your current contributions are sufficient. If no retirement goal is entered, the score is instead based on projected investment growth and time horizon. A score of 80+ is Excellent; 65–79 is Good; 45–64 is Fair; below 45 is Poor. The score is a directional indicator only — it does not account for inflation, taxes, fees, pension income, or spending needs in retirement.',
   },
   {
     question: 'Does this calculator include CPP, OAS, or Social Security?',

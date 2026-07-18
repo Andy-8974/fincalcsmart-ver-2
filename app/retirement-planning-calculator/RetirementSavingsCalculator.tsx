@@ -393,7 +393,16 @@ export default function RetirementSavingsCalculator({
                     suffix="%"
                     inputClassName={inputClsCompact}
                   />
-                  <p className="mt-0.5 text-[10px]" style={{ color: '#9BA8B5' }}>Applied to projection</p>
+                  {(() => {
+                    const raw = parseFloat(form.annualRate);
+                    return !isNaN(raw) && (raw < 0 || raw > 49.9) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Return must be 0–49.9%. Using {Math.max(0, Math.min(49.9, raw))}%.
+                      </p>
+                    ) : (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#9BA8B5' }}>Applied to projection</p>
+                    );
+                  })()}
                 </div>
                 <div>
                   <label className={navyLabelCls} style={navyLabelStyle}>
@@ -406,6 +415,14 @@ export default function RetirementSavingsCalculator({
                     inputClassName={inputClsCompact}
                     placeholder="e.g. 35"
                   />
+                  {(() => {
+                    const raw = parseInt(form.currentAge);
+                    return !isNaN(raw) && (raw < 18 || raw > 99) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Age must be 18–99. Using {Math.max(18, Math.min(99, raw))}.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
               </div>
 
@@ -446,6 +463,19 @@ export default function RetirementSavingsCalculator({
                     inputClassName={inputClsCompact}
                     placeholder="e.g. 65"
                   />
+                  {(() => {
+                    const rawCurr = parseInt(form.currentAge);
+                    const rawRet  = parseInt(form.retirementAge);
+                    if (isNaN(rawRet)) return null;
+                    const currentAgeClamped = Math.max(18, Math.min(99, isNaN(rawCurr) ? 35 : rawCurr));
+                    const floor = currentAgeClamped + 1;
+                    const effective = Math.max(floor, Math.min(100, rawRet));
+                    return rawRet !== effective ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Must be after current age (and ≤ 100). Using {effective}.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
               </div>
             </div>
@@ -912,8 +942,8 @@ export default function RetirementSavingsCalculator({
                     )}
                     <div className="py-1">
                       <p className="text-[10.5px] leading-relaxed" style={{ color: '#94a3b8', fontStyle: 'italic' }}>
-                        Based on a {results.annualRate}% annual return assumption. Actual returns vary.{' '}
-                        Enter a retirement goal above to track progress.
+                        Based on a {results.annualRate}% annual return assumption. Actual returns vary.
+                        {!results.hasGoal && ' Enter a retirement goal above to track progress.'}
                       </p>
                     </div>
                   </div>
