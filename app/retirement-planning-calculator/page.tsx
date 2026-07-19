@@ -109,6 +109,8 @@ const formulaContent = (
         <li><strong>No inflation adjustment</strong> — all values are shown in nominal dollars.</li>
         <li><strong>No taxes, fees, or spending</strong> — growth is shown before tax and before any management fees. Retirement spending is not modeled.</li>
         <li><strong>No government benefits</strong> — CPP, OAS, Social Security, and pension income are excluded.</li>
+        <li><strong>No contribution increases</strong> — future increases to your monthly contribution are not modeled.</li>
+        <li><strong>No account room checking</strong> — available contribution room in tax-advantaged accounts (RRSP, 401(k), IRA, TFSA) is not checked.</li>
       </ul>
     </section>
 
