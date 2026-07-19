@@ -227,7 +227,7 @@ export function buildInvestmentGrowthReportData(
         {
           label:  'Est. Investment Growth',
           value:  fmt(input.totalInterest),
-          accent: 'amber',
+          accent: 'teal',
           sub:    `${input.interestPct.toFixed(1)}% of balance`,
         },
         {
@@ -247,13 +247,13 @@ export function buildInvestmentGrowthReportData(
           label:          'Contributions',
           valueFormatted: fmt(input.totalContributions),
           pct:            contribPct,
-          color:          'teal',
+          color:          'slate',
         },
         {
           label:          'Estimated Investment Growth',
           valueFormatted: fmt(input.totalInterest),
           pct:            growthPct,
-          color:          'slate',
+          color:          'teal',
         },
       ],
       totalFormatted: fmt(input.finalBalance),
@@ -289,7 +289,7 @@ export function buildInvestmentGrowthReportData(
         { label: 'Monthly Contribution',          value: fmtx(input.monthlyContribution) + '/month' },
         { label: 'Investment Horizon',            value: timeLabel },
         { label: 'Total Contributions',           value: fmt(input.totalContributions) },
-        { label: 'Estimated Investment Growth',   value: fmt(input.totalInterest), accent: 'amber' },
+        { label: 'Estimated Investment Growth',   value: fmt(input.totalInterest), accent: 'teal' },
         { label: 'Estimated Future Value',        value: fmt(input.finalBalance), accent: 'teal' },
         { label: 'Contribution Share',            value: `${contribShareDisplay}%` },
         { label: 'Growth Share',                  value: `${growthShareDisplay}%` },

@@ -119,8 +119,8 @@ function fmtShort(n: number): string {
 }
 
 function computeResults(form: FormState, freq: FreqKey, yearsInvested: number): CIResults | null {
-  const initialInvestment = Math.max(0, parseFloat(form.initialInvestment) || 0);
-  const monthlyContribution = Math.max(0, parseFloat(form.monthlyContribution) || 0);
+  const initialInvestment = Math.max(0, Math.min(100_000_000, parseFloat(form.initialInvestment) || 0));
+  const monthlyContribution = Math.max(0, Math.min(1_000_000, parseFloat(form.monthlyContribution) || 0));
   const annualRate = Math.max(0, Math.min(49.9, parseFloat(form.annualRate) || 0));
   const targetAmount = Math.max(0, parseFloat(form.targetAmount) || 0);
   const rawAge = parseInt(form.startingAge) || 0;
@@ -392,6 +392,14 @@ export default function CompoundInterestCalculator({
                     prefix={currencyPrefix}
                     inputClassName={inputClsCompact}
                   />
+                  {(() => {
+                    const raw = parseFloat(form.initialInvestment);
+                    return !isNaN(raw) && raw > 100_000_000 ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Max supported is {fmt(100_000_000)}. Using {fmt(100_000_000)}.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
                 <div>
@@ -405,6 +413,14 @@ export default function CompoundInterestCalculator({
                     prefix={currencyPrefix}
                     inputClassName={inputClsCompact}
                   />
+                  {(() => {
+                    const raw = parseFloat(form.monthlyContribution);
+                    return !isNaN(raw) && raw > 1_000_000 ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Max supported is {fmt(1_000_000)}/month. Using {fmt(1_000_000)}.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
                 <div>
@@ -418,6 +434,14 @@ export default function CompoundInterestCalculator({
                     suffix="%"
                     inputClassName={inputClsCompact}
                   />
+                  {(() => {
+                    const raw = parseFloat(form.annualRate);
+                    return !isNaN(raw) && (raw < 0 || raw > 49.9) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Rate must be 0–49.9%. Using {Math.max(0, Math.min(49.9, raw))}%.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
               </div>
@@ -768,7 +792,7 @@ export default function CompoundInterestCalculator({
               return (
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 flex-1 min-h-0">
 
-                  <div className="flex flex-row sm:flex-col gap-4 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
+                  <div className="flex flex-col gap-3 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
                     <div className="flex flex-row sm:flex-col gap-3 sm:gap-2.5">
                       {statRows.map(({ label, value, color }) => (
                         <div key={label}>
