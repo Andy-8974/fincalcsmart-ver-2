@@ -336,6 +336,14 @@ export default function PersonalLoanCalculator({
                     suffix="%"
                     inputClassName={inputClsCompact}
                   />
+                  {(() => {
+                    const raw = parseFloat(form.annualRate);
+                    return !isNaN(raw) && (raw < 0 || raw > 49.9) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Rate must be 0–49.9%. Using {Math.max(0, Math.min(49.9, raw))}%.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
               </div>{/* end left col */}
@@ -619,6 +627,16 @@ export default function PersonalLoanCalculator({
               const cur = allTerms.find((t) => t.isCurrent) ?? allTerms[2];
               const maxCost = Math.max(...allTerms.map((t) => t.totalCost));
               const yMax = Math.ceil(maxCost / 1000) * 1000;
+              const fmtTick = (val: number) => {
+                if (val === 0) return '$0';
+                if (yMax >= 1000000) {
+                  const m = (val / 1000000).toFixed(2).replace(/0$/, '').replace(/\.0$/, '');
+                  return `$${m}M`;
+                }
+                const decimals = yMax < 10000 ? 1 : 0;
+                const k = (val / 1000).toFixed(decimals).replace(/\.0$/, '');
+                return `$${k}k`;
+              };
               const CHART_H = 188;
               const XLABEL_H = 30;
               const YAXIS_W = 30;
@@ -637,8 +655,8 @@ export default function PersonalLoanCalculator({
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 flex-1 min-h-0">
 
                   {/* ── Left: summary + legend ───────────────────────────── */}
-                  <div className="flex flex-row sm:flex-col gap-4 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
-                    <div className="flex flex-row sm:flex-col gap-3 sm:gap-2.5">
+                  <div className="flex flex-col gap-4 sm:w-[108px] shrink-0 sm:justify-center">
+                    <div className="flex flex-col gap-3 sm:gap-2.5">
                       {statRows.map(({ label, value, color }) => (
                         <div key={label}>
                           <p style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9BA8B5', marginBottom: 2 }}>{label}</p>
@@ -647,7 +665,7 @@ export default function PersonalLoanCalculator({
                       ))}
                     </div>
                     <div className="hidden sm:block" style={{ height: 1, background: 'rgba(15,41,66,0.08)' }} />
-                    <div className="flex flex-row sm:flex-col gap-2 sm:gap-1.5">
+                    <div className="flex flex-col gap-2 sm:gap-1.5">
                       {legendRows.map(({ label, color }) => (
                         <div key={label} className="flex items-center gap-1.5">
                           <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: color }} />
@@ -677,7 +695,7 @@ export default function PersonalLoanCalculator({
                           lineHeight: 1,
                         }}
                       >
-                        {frac === 0 ? '$0' : `$${Math.round((yMax * frac) / 1000)}k`}
+                        {fmtTick(yMax * frac)}
                       </div>
                     ))}
 
@@ -999,10 +1017,12 @@ export default function PersonalLoanCalculator({
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-4 h-4 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
-                    <span className="text-sm font-bold" style={{ color: '#1DB584' }}>Smart Optimization Found</span>
+                    <span className="text-sm font-bold" style={{ color: '#1DB584' }}>
+                      {results.shorterTermOpt && results.shorterTermOpt.interestSaved <= 0 ? 'No Interest Savings' : 'Smart Optimization Found'}
+                    </span>
                   </div>
 
-                  {results.shorterTermOpt ? (
+                  {results.shorterTermOpt && results.shorterTermOpt.interestSaved > 0 ? (
                     <>
                       {/* Mobile */}
                       <div className="flex flex-col gap-3 mt-1 lg:hidden">
@@ -1082,6 +1102,38 @@ export default function PersonalLoanCalculator({
                         <p className="text-[11px] italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
                           Choosing a shorter term may reduce total interest while increasing your monthly payment.
                         </p>
+                      </div>
+                    </>
+                  ) : results.shorterTermOpt ? (
+                    <>
+                      {/* 0%-rate — Mobile */}
+                      <div className="flex flex-col gap-3 mt-1 lg:hidden">
+                        <div className="rounded-xl flex items-center justify-center px-4 py-4"
+                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                          <span className="font-extrabold tabular-nums"
+                            style={{ fontSize: 'clamp(1.9rem, 9vw, 2.4rem)', color: '#1DB584', letterSpacing: '-1.5px', lineHeight: 1 }}>
+                            {fmt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-sm">no interest to save</p>
+                          <p className="text-slate-400 text-xs mt-0.5">a shorter term won&apos;t reduce interest at a 0% rate</p>
+                        </div>
+                      </div>
+
+                      {/* 0%-rate — Desktop */}
+                      <div className="hidden lg:flex flex-col gap-3 mt-1 flex-1 justify-center">
+                        <div className="flex-1 min-w-0 rounded-xl flex items-center justify-center px-4 py-7"
+                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                          <span className="font-extrabold tabular-nums"
+                            style={{ fontSize: 'clamp(2.0rem, 4vw, 2.7rem)', color: '#1DB584', letterSpacing: '-2px', lineHeight: 1 }}>
+                            {fmt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-sm">no interest to save</p>
+                          <p className="text-slate-400 text-xs mt-0.5">a shorter term won&apos;t reduce interest at a 0% rate</p>
+                        </div>
                       </div>
                     </>
                   ) : (

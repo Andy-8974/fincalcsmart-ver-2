@@ -119,14 +119,14 @@ const formulaContent = (
         How the Loan Cost Score Works
       </h3>
       <p className="text-sm text-slate-600 leading-relaxed mb-3">
-        The Loan Cost Score (0–100) is a composite indicator that reflects three dimensions of loan affordability:
+        The Loan Cost Score (0–100) is a composite indicator that reflects two dimensions of borrowing cost:
       </p>
       <ul className="space-y-2 list-disc list-inside text-sm text-slate-600">
-        <li><strong>Rate competitiveness (40 pts)</strong> — how your rate compares to typical market ranges for good-credit borrowers.</li>
-        <li><strong>Interest cost efficiency (40 pts)</strong> — total interest as a percentage of the amount borrowed. A lower ratio means less is lost to interest charges.</li>
-        <li><strong>Payment-to-income ratio (20 pts)</strong> — only calculated when annual income is provided. Reflects how the monthly payment fits within your budget.</li>
+        <li><strong>Rate competitiveness (50 pts)</strong> — how your rate compares to typical market ranges for good-credit borrowers.</li>
+        <li><strong>Interest cost efficiency (50 pts)</strong> — total interest as a percentage of the amount borrowed. A lower ratio means less is lost to interest charges.</li>
       </ul>
       <p className="text-sm text-slate-600 leading-relaxed mt-3">
+        Payment-to-income fit is scored separately in the Affordability card once you enter your annual income — it does not affect the Loan Cost Score above.
         The score is illustrative only — it does not affect the payment calculation and is not used in any lending decision.
       </p>
     </section>
