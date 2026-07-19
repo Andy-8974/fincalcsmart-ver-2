@@ -110,8 +110,16 @@ export function buildCanadaRegisteredReportData(
     : `${accountName} contributions reduce your taxable income in the year of contribution, and growth is tax-deferred until withdrawal. This projection does not model RRSP-to-RRIF conversion requirements, withdrawal taxes, spousal RRSP rules, or the Home Buyers' Plan / Lifelong Learning Plan. Verify your available deduction room via your CRA Notice of Assessment or CRA My Account.`;
 
   // ── Key drivers ───────────────────────────────────────────────────────────
+  // Rule of 72 is only meaningful at rates where the resulting doubling period
+  // is a sensible number of years; at 0% or near-0% it produces no claim or an
+  // extreme, misleading figure, so those cases fall back to neutral wording.
+  const rule72Years = 72 / Math.max(input.annualRate, 0.0001);
+  const growthDriverText = input.annualRate <= 0 || rule72Years > 100
+    ? `Compounding over ${input.yearsInvested} years is the primary growth driver. At the selected return rate, meaningful investment growth is limited. Starting earlier or extending the horizon compounds this effect once a positive return is assumed.`
+    : `Compounding over ${input.yearsInvested} years is the primary growth driver. At ${input.annualRate}%, funds approximately double every ${rule72Years.toFixed(0)} years (Rule of 72). Starting earlier or extending the horizon compounds this effect.`;
+
   const keyDrivers = [
-    `Compounding over ${input.yearsInvested} years is the primary growth driver. At ${input.annualRate}%, funds approximately double every ${(72 / Math.max(input.annualRate, 0.1)).toFixed(0)} years (Rule of 72). Starting earlier or extending the horizon compounds this effect.`,
+    growthDriverText,
     `Monthly contributions of ${fmtx(input.monthlyContribution)}/month accumulate to ${fmt(input.monthlyContribution * 12 * input.yearsInvested)} over ${input.yearsInvested} years before growth. Increasing contributions by ${fmtx(100)}/month adds approximately ${fmt(100 * 12 * input.yearsInvested)} in additional invested capital.`,
     input.overRoom
       ? `Your planned contributions exceed your available ${accountName} room by ${fmt(input.overRoomBy)}. Reduce your contribution plan or verify your actual room with CRA before proceeding.`

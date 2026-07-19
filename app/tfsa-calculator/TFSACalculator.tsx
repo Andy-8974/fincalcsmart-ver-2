@@ -948,7 +948,7 @@ export default function TFSACalculator({
                         );
                       })()}
                       <p className="text-slate-500 mt-2" style={{ fontSize: '11px', lineHeight: 1.5 }}>
-                        {results.growthPct.toFixed(1)}% of your projected TFSA value comes from tax-free growth.
+                        {((results.taxFreeGrowth / Math.max(1, results.projectedValue)) * 100).toFixed(1)}% of your projected TFSA value comes from tax-free growth.
                         {results.growthStatus === 'Healthy' ? ' Compounding is working strongly over your chosen horizon.' : results.growthStatus === 'Watch' ? ' A longer horizon or higher return assumption increases this share.' : ' Consider a longer investment horizon to let compounding build more growth.'}
                       </p>
                     </div>
@@ -1296,7 +1296,7 @@ export default function TFSACalculator({
                     At an assumed {results.annualRate}% annual return, your TFSA could grow to{' '}
                     <strong className="text-emerald-700">{fmtCAD(safe(results.projectedValue))}</strong> after {results.yearsInvested} years.
                     Estimated tax-free growth of <strong className="text-emerald-700">{fmtCAD(safe(results.taxFreeGrowth))}</strong> would represent{' '}
-                    {results.growthPct.toFixed(1)}% of your projected value.
+                    {((results.taxFreeGrowth / Math.max(1, results.projectedValue)) * 100).toFixed(1)}% of your projected value.
                     At year 10: <strong className="text-emerald-700">{fmtCAD(safe(results.valAt10))}</strong> ·
                     year 20: <strong className="text-emerald-700">{fmtCAD(safe(results.valAt20))}</strong>.
                   </p>
