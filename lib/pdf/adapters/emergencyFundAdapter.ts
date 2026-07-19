@@ -67,7 +67,7 @@ export function buildEmergencyFundReportData(
   const regionLabel = region === 'ca' ? 'Canada' : 'United States';
 
   const readinessAccent: 'teal' | 'amber' | 'red' =
-    input.readinessScore >= 70 ? 'teal' : input.readinessScore >= 45 ? 'amber' : 'red';
+    input.readinessStatus === 'Healthy' ? 'teal' : input.readinessStatus === 'Watch' ? 'amber' : 'red';
 
   const progressAccent: 'teal' | 'amber' | 'red' =
     input.tpBadge === 'On Track' ? 'teal' : input.tpBadge === 'Close' ? 'amber' : 'red';
@@ -82,11 +82,11 @@ export function buildEmergencyFundReportData(
 
   const fmtMonths = (m: number) => {
     if (!m || m <= 0) return '0 mo';
-    const yr = Math.floor(m / 12);
-    const mo = Math.round(m % 12);
-    if (yr === 0) return `${mo} mo`;
-    if (mo === 0) return `${yr} yr`;
-    return `${yr} yr ${mo} mo`;
+    const c = Math.max(1, Math.ceil(m));
+    if (c < 12) return `${c} mo`;
+    const yr = Math.floor(c / 12);
+    const mo = c % 12;
+    return mo === 0 ? `${yr} yr` : `${yr} yr ${mo} mo`;
   };
 
   // Composition bar: current savings vs remaining gap (total = target)
@@ -114,7 +114,9 @@ export function buildEmergencyFundReportData(
   // ── Key drivers ───────────────────────────────────────────────────────────
   const keyDrivers = [
     `Monthly expenses of ${fmt(input.monthlyExpenses)} directly set the fund target (${input.targetMonths} months = ${fmt(input.targetAmount)}). Reducing essential expenses lowers the required fund and reduces the time to reach it.`,
-    input.monthlyContribution > 0
+    atTarget
+      ? `Your fund already exceeds your ${fmt(input.targetAmount)} target by ${fmt(input.surplus)}. Maintaining your current contribution keeps your cushion ahead of rising expenses.`
+      : input.monthlyContribution > 0
       ? `Monthly contribution of ${fmtx(input.monthlyContribution)}/month closes the ${fmt(input.gap)} gap in approximately ${fmtMonths(input.monthsToTarget ?? 0)}.`
       : `No monthly contribution entered. Setting even ${fmtx(200)}/month would close the ${fmt(input.gap)} gap in approximately ${fmtMonths(input.gap / 200)} months.`,
     `Target coverage of ${input.targetMonths} months (${input.recommendedLabel} recommended for ${STABILITY_LABELS[input.stability] ?? input.stability} income). Increasing the target to 9-12 months is prudent for variable income or single-income households.`,

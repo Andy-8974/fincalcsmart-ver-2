@@ -699,8 +699,8 @@ export default function EmergencyFundCalculator({
               return (
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 flex-1 min-h-0">
 
-                  <div className="flex flex-row sm:flex-col gap-4 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
-                    <div className="flex flex-row sm:flex-col gap-3 sm:gap-2.5">
+                  <div className="flex flex-row flex-wrap sm:flex-nowrap sm:flex-col gap-x-4 gap-y-2 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
+                    <div className="flex flex-row flex-wrap sm:flex-nowrap sm:flex-col gap-x-3 gap-y-1.5 sm:gap-2.5">
                       {statRows.map(({ label, value, color }) => (
                         <div key={label}>
                           <p style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9BA8B5', marginBottom: 2 }}>{label}</p>
@@ -709,7 +709,7 @@ export default function EmergencyFundCalculator({
                       ))}
                     </div>
                     <div className="hidden sm:block" style={{ height: 1, background: 'rgba(15,41,66,0.08)' }} />
-                    <div className="flex flex-row sm:flex-col gap-2 sm:gap-1.5">
+                    <div className="flex flex-row flex-wrap sm:flex-nowrap sm:flex-col gap-x-2 gap-y-1 sm:gap-1.5">
                       <div className="flex items-center gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: '#334155' }} />
                         <span style={{ fontSize: '10px', color: '#6B7A8D' }}>Below target</span>
@@ -1307,8 +1307,8 @@ export default function EmergencyFundCalculator({
                       : results.monthlyContribution > 0 && results.monthsToTarget !== null
                       ? <>
                           At <strong className="text-slate-800">{fmt(results.monthlyContribution)}/month</strong>, you will reach your target in approximately <strong className="text-slate-800">{fmtMonths(results.monthsToTarget)}</strong>.
-                          {results.boost100Months !== null && results.monthsToTarget - results.boost100Months >= 1
-                            ? ` Adding an extra ${currencyPrefix}100/month would get you there in ${fmtMonths(results.boost100Months)} — ${fmtMonths(results.monthsToTarget - results.boost100Months)} sooner.`
+                          {results.boost100Months !== null && Math.ceil(results.monthsToTarget) - Math.ceil(results.boost100Months) >= 1
+                            ? ` Adding an extra ${currencyPrefix}100/month would get you there in ${fmtMonths(results.boost100Months)} — ${fmtMonths(Math.ceil(results.monthsToTarget) - Math.ceil(results.boost100Months))} sooner.`
                             : ''}
                         </>
                       : <>No monthly contribution is set. To reach your {fmt(results.targetAmount)} target in 12 months, contribute approximately <strong className="text-slate-800">{fmt(Math.round(results.suggestedMonthly))}/month</strong>. Even a small regular contribution builds your fund consistently.</>}
