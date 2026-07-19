@@ -322,6 +322,14 @@ export default function CarLoanCalculator({
                     suffix="%"
                     inputClassName={inputClsCompact}
                   />
+                  {(() => {
+                    const raw = parseFloat(form.annualRate);
+                    return !isNaN(raw) && (raw < 0 || raw > 49.9) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Rate must be 0–49.9%. Using {Math.max(0, Math.min(49.9, raw))}%.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
               </div>
@@ -344,8 +352,15 @@ export default function CarLoanCalculator({
                   {(() => {
                     const vp = parseFloat(form.vehiclePrice) || 0;
                     const dp = Math.max(0, parseFloat(form.downPayment) || 0);
-                    const pct = vp > 0 ? (dp / vp) * 100 : 0;
                     if (vp <= 0) return null;
+                    if (dp > vp) {
+                      return (
+                        <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                          Down payment can&apos;t exceed vehicle price. Amount financed is {currencyPrefix}0.
+                        </p>
+                      );
+                    }
+                    const pct = (dp / vp) * 100;
                     const color = pct >= 20 ? '#1DB584' : pct >= 10 ? '#f59e0b' : '#94a3b8';
                     return (
                       <p className="mt-0.5 text-[10px] font-semibold" style={{ color }}>
@@ -643,7 +658,7 @@ export default function CarLoanCalculator({
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 flex-1 min-h-0">
 
                   {/* Left: summary + legend */}
-                  <div className="flex flex-row sm:flex-col gap-4 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
+                  <div className="flex flex-col gap-3 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
                     <div className="flex flex-row sm:flex-col gap-3 sm:gap-2.5">
                       {statRows.map(({ label, value, color }) => (
                         <div key={label}>
