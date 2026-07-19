@@ -76,6 +76,11 @@ export function buildCanadaRegisteredReportData(
   const roomAccent: 'teal' | 'amber' | 'red' =
     input.overRoom ? 'red' : input.roomUsedPct >= 90 ? 'amber' : 'teal';
 
+  // Tax reduction is only estimated when a marginal tax rate and available room
+  // were both entered -- mirrors the UI's "—" fallback, avoids a misleading $0.
+  const showTaxEstimate = !isTFSA && (input.marginalTaxRate ?? 0) > 0 && input.availableRoom > 0;
+  const taxEstimateText = 'Not estimated (enter a marginal tax rate and available RRSP room to see this estimate).';
+
   const statusType: 'success' | 'warning' | 'danger' =
     input.overRoom ? 'danger' : input.growthScore >= 60 ? 'success' : 'warning';
 
@@ -101,7 +106,7 @@ export function buildCanadaRegisteredReportData(
 
   const p1 = isTFSA
     ? `Based on a starting ${accountName} balance of ${fmt(input.currentBalance)}, a one-time contribution of ${fmt(input.plannedOneTime)}, and ${fmtx(input.monthlyContribution)}/month over ${input.yearsInvested} years at ${input.annualRate}% assumed return, your projected ${accountName} value is ${fmt(input.projectedValue)}. All growth is estimated to be tax-free on withdrawal. ${accountName} Growth Score: ${input.growthScore}/100 (${input.growthLabel}).`
-    : `Based on a starting ${accountName} balance of ${fmt(input.currentBalance)}, a one-time contribution of ${fmt(input.plannedOneTime)}, and ${fmtx(input.monthlyContribution)}/month over ${input.yearsInvested} years at ${input.annualRate}% assumed return, your projected ${accountName} value is ${fmt(input.projectedValue)}. Estimated tax reduction on the first-year contribution: ${fmt(input.estimatedTaxRefund ?? 0)} (simplified estimate at ${input.marginalTaxRate ?? 0}% marginal rate). ${accountName} Growth Score: ${input.growthScore}/100 (${input.growthLabel}).`;
+    : `Based on a starting ${accountName} balance of ${fmt(input.currentBalance)}, a one-time contribution of ${fmt(input.plannedOneTime)}, and ${fmtx(input.monthlyContribution)}/month over ${input.yearsInvested} years at ${input.annualRate}% assumed return, your projected ${accountName} value is ${fmt(input.projectedValue)}. ${showTaxEstimate ? `Estimated tax reduction on the first-year contribution: ${fmt(input.estimatedTaxRefund ?? 0)} (simplified estimate at ${input.marginalTaxRate ?? 0}% marginal rate).` : `Estimated tax reduction: ${taxEstimateText}`} ${accountName} Growth Score: ${input.growthScore}/100 (${input.growthLabel}).`;
 
   const p2 = `Your projected ${fmt(input.projectedValue)} consists of approximately ${fmt(contribTotal)} in contributions and ${fmt(input.taxFreeGrowth)} in estimated ${isTFSA ? 'tax-free' : 'tax-deferred'} growth. Milestone projections at ${input.annualRate}% return: ${fmt(input.valAt10)} at year 10, ${fmt(input.valAt20)} at year 20, ${fmt(input.valAt30)} at year 30. ${roomContext}`;
 
@@ -144,7 +149,7 @@ export function buildCanadaRegisteredReportData(
         { label: `Projected ${accountName} Value`, value: fmt(input.projectedValue), accent: 'teal' },
         { label: 'Total Contributions',            value: fmt(contribTotal) },
         { label: `Est. ${isTFSA ? 'Tax-Free' : 'Tax-Deferred'} Growth`, value: fmt(input.taxFreeGrowth), accent: 'teal' },
-        ...(isTFSA ? [] : [{ label: 'Est. Tax Reduction', value: fmt(input.estimatedTaxRefund ?? 0), accent: 'teal' as const }]),
+        ...(isTFSA ? [] : [{ label: 'Est. Tax Reduction', value: showTaxEstimate ? fmt(input.estimatedTaxRefund ?? 0) : 'Not estimated', accent: 'teal' as const }]),
         { label: `${accountName} Growth Score`, value: `${input.growthScore}/100`, sub: input.growthLabel, accent: growthAccent },
       ],
       statusLabel,
@@ -191,7 +196,7 @@ export function buildCanadaRegisteredReportData(
         { label: 'Planned First-Year Contributions', value: fmt(input.plannedFirstYear) },
         { label: `${accountName} Room Used`, value: `${input.roomUsedPct.toFixed(1)}%`, accent: roomAccent },
         { label: 'Over Room?', value: input.overRoom ? `Yes -- over by ${fmt(input.overRoomBy)}` : 'No', accent: input.overRoom ? 'red' : 'teal' },
-        ...(input.accountType === 'rrsp' ? [{ label: 'Est. Tax Reduction', value: fmt(input.estimatedTaxRefund ?? 0), accent: 'teal' as const }] : []),
+        ...(input.accountType === 'rrsp' ? [{ label: 'Est. Tax Reduction', value: showTaxEstimate ? fmt(input.estimatedTaxRefund ?? 0) : 'Not estimated', accent: 'teal' as const }] : []),
         { label: 'Value at Year 10',   value: fmt(input.valAt10) },
         { label: 'Value at Year 20',   value: fmt(input.valAt20) },
         { label: 'Value at Year 30',   value: fmt(input.valAt30) },

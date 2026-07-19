@@ -73,7 +73,7 @@ interface RRSPResults {
 
 const DEFAULTS: FormState = {
   currentBalance:      '25000',
-  availableRoom:       '32490',
+  availableRoom:       '33810',
   plannedOneTime:      '10000',
   monthlyContribution: '500',
   marginalTaxRate:     '33',
@@ -95,6 +95,10 @@ const FREQ_OPTIONS: { key: FreqKey; label: string; periods: number }[] = [
 
 function safe(n: number): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function fmtOverage(n: number): string {
+  return n > 0 && n < 1 ? fmtCADx(n) : fmtCAD(n);
 }
 
 function getEffectiveMonthlyRate(annualRatePct: number, periods: number): number {
@@ -554,14 +558,14 @@ export default function RRSPSavingsCalculator({
                       }}
                     >
                       {results.availableRoom === 0 ? '—'
-                        : results.overRoom ? `-${fmtCAD(results.overRoomBy)}`
+                        : results.overRoom ? `-${fmtOverage(results.overRoomBy)}`
                         : fmtCAD(safe(results.roomRemaining))}
                     </span>
                   </div>
                   <div className="flex items-center justify-between py-1.5">
                     <span className="text-[13px]" style={{ color: '#CBD5E1' }}>Estimated Tax Reduction</span>
                     <span className="text-[13px] font-semibold" style={{ color: '#1DB584' }}>
-                      {results.marginalTaxRate > 0 ? fmtCAD(safe(results.estimatedTaxRefund)) : '—'}
+                      {results.marginalTaxRate > 0 && results.availableRoom > 0 ? fmtCAD(safe(results.estimatedTaxRefund)) : '—'}
                     </span>
                   </div>
                 </div>
@@ -579,7 +583,7 @@ export default function RRSPSavingsCalculator({
                           : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.45)' };
                   const pillText =
                     roomPillState === 'over'
-                      ? `⚠ Exceeds entered room by ${fmtCAD(results.overRoomBy)}`
+                      ? `⚠ Exceeds entered room by ${fmtOverage(results.overRoomBy)}`
                       : roomPillState === 'full'
                         ? 'Deduction room fully used after first-year plan'
                         : roomPillState === 'remaining'
@@ -862,20 +866,22 @@ export default function RRSPSavingsCalculator({
                         color: overRoom ? '#ef4444' : roomRemaining === 0 && availableRoom > 0 ? '#f59e0b' : '#1DB584',
                         fontSize: '12.5px',
                       }}>
-                        {availableRoom === 0 ? '—' : overRoom ? `-${fmtCAD(overRoomBy)}` : fmtCAD(safe(roomRemaining))}
+                        {availableRoom === 0 ? '—' : overRoom ? `-${fmtOverage(overRoomBy)}` : fmtCAD(safe(roomRemaining))}
                       </span>
                     </div>
                     <div className="flex items-start justify-between py-1 gap-2">
                       <div className="min-w-0">
                         <span style={{ color: '#4B5563', fontSize: '12.5px', display: 'block' }}>Estimated Tax Reduction</span>
                         <span style={{ color: '#94a3b8', fontSize: '10px', fontStyle: 'italic' }}>
-                          {results.marginalTaxRate > 0
-                            ? `${results.marginalTaxRate}% rate · simplified estimate only`
-                            : 'Enter marginal rate above'}
+                          {results.availableRoom === 0
+                            ? 'Enter deduction room above'
+                            : results.marginalTaxRate > 0
+                              ? `${results.marginalTaxRate}% rate · simplified estimate only`
+                              : 'Enter marginal rate above'}
                         </span>
                       </div>
                       <span className="font-semibold shrink-0" style={{ color: '#1DB584', fontSize: '12.5px' }}>
-                        {results.marginalTaxRate > 0 ? fmtCAD(safe(results.estimatedTaxRefund)) : '—'}
+                        {results.marginalTaxRate > 0 && results.availableRoom > 0 ? fmtCAD(safe(results.estimatedTaxRefund)) : '—'}
                       </span>
                     </div>
                     <div className="pt-1 pb-0.5">
@@ -1057,7 +1063,7 @@ export default function RRSPSavingsCalculator({
                             {!hasRoom
                               ? 'Enter your available RRSP deduction room above to see your first-year room usage.'
                               : overRoom
-                                ? `Your first-year plan of ${fmtCAD(safe(results.plannedFirstYear))} exceeds your entered room of ${fmtCAD(safe(availableRoom))} by ${fmtCAD(results.overRoomBy)}. Verify with CRA before contributing.`
+                                ? `Your first-year plan of ${fmtCAD(safe(results.plannedFirstYear))} exceeds your entered room of ${fmtCAD(safe(availableRoom))} by ${fmtOverage(results.overRoomBy)}. Verify with CRA before contributing.`
                                 : `Your first-year plan uses ${Math.round(roomUsedPct)}% of your entered deduction room of ${fmtCAD(safe(availableRoom))}.`
                             }
                           </p>
@@ -1089,7 +1095,7 @@ export default function RRSPSavingsCalculator({
                           style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)' }}>
                           <span className="font-extrabold tabular-nums"
                             style={{ fontSize: 'clamp(1.9rem, 9vw, 2.4rem)', color: '#ef4444', letterSpacing: '-1.5px', lineHeight: 1 }}>
-                            {fmtCAD(safe(results.overRoomBy))}
+                            {fmtOverage(safe(results.overRoomBy))}
                           </span>
                         </div>
                         <div>
@@ -1124,7 +1130,7 @@ export default function RRSPSavingsCalculator({
                             style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)' }}>
                             <span className="font-extrabold tabular-nums"
                               style={{ fontSize: 'clamp(2.0rem, 4vw, 2.7rem)', color: '#ef4444', letterSpacing: '-2px', lineHeight: 1 }}>
-                              {fmtCAD(safe(results.overRoomBy))}
+                              {fmtOverage(safe(results.overRoomBy))}
                             </span>
                           </div>
                           <div className="flex flex-col justify-center rounded-xl px-4 py-7 shrink-0"
@@ -1306,7 +1312,7 @@ export default function RRSPSavingsCalculator({
                         <p className="text-slate-400 text-xs">Check CRA My Account or your Notice of Assessment to find your current RRSP deduction room, then enter it above to see the room analysis and tax refund estimate.</p>
                       </div>
                       <p className="text-[11px] italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                        For 2025, the annual RRSP dollar limit is $32,490. Your personal room also depends on earned income, unused room carried forward, and pension adjustments.
+                        For 2026, the annual RRSP dollar maximum is $33,810 — but your actual deduction limit depends on your earned income, unused room carried forward, and pension adjustments, and may be higher or lower.
                       </p>
                     </div>
                   ))()}
@@ -1347,7 +1353,9 @@ export default function RRSPSavingsCalculator({
                     <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">Estimated Tax Reduction</p>
                   </div>
                   <p className="text-sm text-slate-700 leading-relaxed">
-                    {results.marginalTaxRate > 0 ? (
+                    {results.availableRoom === 0 ? (
+                      'Enter your available RRSP deduction room above to see an estimated tax reduction. This is illustrative only and not tax advice.'
+                    ) : results.marginalTaxRate > 0 ? (
                       <>
                         At a {results.marginalTaxRate}% combined marginal rate, your first-year deductible contribution of{' '}
                         <strong className="text-emerald-700">{fmtCAD(safe(results.taxRefundBase))}</strong>{' '}
@@ -1387,7 +1395,7 @@ export default function RRSPSavingsCalculator({
                         {isOver
                           ? <>Your first-year plan of <strong className="text-orange-700">{fmtCAD(safe(results.plannedFirstYear))}</strong> exceeds your entered deduction room of <strong className="text-orange-700">{fmtCAD(safe(results.availableRoom))}</strong>. If this reflects your actual CRA room, contributing this amount may trigger a penalty. Verify your exact room with CRA My Account before contributing. This calculator does not provide tax advice.</>
                           : noRoom
-                            ? 'Enter your available RRSP deduction room above to see whether your plan is on track and assess over-contribution risk. For 2025, the annual RRSP dollar limit is $32,490.'
+                            ? 'Enter your available RRSP deduction room above to see whether your plan is on track and assess over-contribution risk. For 2026, the annual RRSP dollar maximum is $33,810 — your actual limit may differ.'
                             : <>At an assumed {results.annualRate}% annual return, your RRSP could grow to{' '}
                                 <strong className="text-purple-700">{fmtCAD(safe(results.projectedValue))}</strong> after {results.yearsInvested} years.
                                 Investment growth of <strong className="text-purple-700">{fmtCAD(safe(results.investmentGrowth))}</strong> represents {results.growthPct.toFixed(1)}% of your projected value.

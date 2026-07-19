@@ -16,7 +16,7 @@ const faqItems: Array<{ question: string; answer: string }> = [
   {
     question: 'What is RRSP deduction room?',
     answer:
-      'Your RRSP deduction room (also called contribution room) is the maximum amount you can contribute to your RRSP and deduct from income in a given year. It is generally calculated as 18% of your previous year\'s earned income, up to the annual dollar limit ($32,490 for 2025), minus any pension adjustment, plus any unused room carried forward from prior years. Only CRA holds your complete and authoritative deduction room figure. Always verify your exact available room in CRA My Account, on your Notice of Assessment, or via Form T1028 before contributing.',
+      'Your RRSP deduction room (also called contribution room) is the maximum amount you can contribute to your RRSP and deduct from income in a given year. It is generally calculated as 18% of your previous year\'s earned income, up to the annual dollar maximum ($33,810 for 2026), minus any pension adjustment, plus any unused room carried forward from prior years. This annual maximum is a ceiling, not your personal figure — only CRA holds your complete and authoritative deduction room. Always verify your exact available room in CRA My Account, on your Notice of Assessment, or via Form T1028 before contributing.',
   },
   {
     question: 'Why do I have to enter my deduction room manually?',
@@ -36,7 +36,7 @@ const faqItems: Array<{ question: string; answer: string }> = [
   {
     question: 'What is the RRSP contribution deadline?',
     answer:
-      'You generally have until 60 days after the end of the tax year to make RRSP contributions that can be deducted on that year\'s tax return. For the 2025 tax year, the RRSP contribution deadline is typically March 2, 2026. Contributions made after that date apply to the following tax year. Always confirm the exact deadline on the CRA website, as dates can shift slightly based on weekends and holidays.',
+      'You generally have until 60 days after the end of the tax year to make RRSP contributions that can be deducted on that year\'s tax return. For contributions to be deductible on your 2026 tax return, the deadline is the 60th day of 2027 — typically March 1, 2027. Contributions made after that date apply to the following tax year. Always confirm the exact deadline on the CRA website, as dates can shift slightly based on weekends and holidays.',
   },
   {
     question: 'What assumptions does this calculator make?',
@@ -114,7 +114,7 @@ const formulaContent = (
         RRSP deduction room is generally calculated by CRA based on your earned income, annual limits, pension adjustments, and unused room carried forward. Key things to know:
       </p>
       <ul className="space-y-2 list-disc list-inside text-sm text-slate-600 mb-5">
-        <li><strong>Annual dollar limit.</strong> For 2025, the RRSP annual dollar limit is $32,490. This is the maximum deductible contribution from current-year room alone.</li>
+        <li><strong>Annual dollar maximum.</strong> For 2026, the RRSP annual dollar maximum is $33,810. This is the ceiling on current-year room alone — it is not your personal deduction limit, which may be lower (if your earned income is lower) or higher (via carried-forward unused room).</li>
         <li><strong>18% of earned income.</strong> Your room for a given year is generally 18% of your previous year&apos;s earned income, up to the annual limit, minus your pension adjustment.</li>
         <li><strong>Unused room carries forward.</strong> Any room not used in a prior year rolls over automatically — so your available room may be much larger than the current year&apos;s limit.</li>
         <li><strong>Verify with CRA.</strong> This calculator does not calculate or verify your exact deduction room. Always check CRA My Account, your Notice of Assessment, or Form T1028 before contributing.</li>
