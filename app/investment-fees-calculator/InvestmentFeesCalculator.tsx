@@ -359,7 +359,16 @@ export default function InvestmentFeesCalculator({
                     suffix="%"
                     inputClassName={inputClsCompact}
                   />
-                  <p className="mt-0.5 text-[10px]" style={{ color: '#9BA8B5' }}>Before fees</p>
+                  {(() => {
+                    const raw = parseFloat(form.annualReturn);
+                    return !isNaN(raw) && (raw < 0 || raw > 49.9) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Return must be 0–49.9%. Using {Math.max(0, Math.min(49.9, raw))}%.
+                      </p>
+                    ) : (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#9BA8B5' }}>Before fees</p>
+                    );
+                  })()}
                 </div>
 
               </div>
@@ -378,6 +387,14 @@ export default function InvestmentFeesCalculator({
                     suffix="%"
                     inputClassName={inputClsCompact}
                   />
+                  {(() => {
+                    const raw = parseFloat(form.currentFee);
+                    return !isNaN(raw) && (raw < 0 || raw > 49.9) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Fee must be 0–49.9%. Using {Math.max(0, Math.min(49.9, raw))}%.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
                 {/* Year pills */}
@@ -415,10 +432,18 @@ export default function InvestmentFeesCalculator({
                     suffix="%"
                     inputClassName={inputClsCompact}
                   />
+                  {(() => {
+                    const raw = parseFloat(form.compFee);
+                    return !isNaN(raw) && (raw < 0 || raw > 49.9) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Fee must be 0–49.9%. Using {Math.max(0, Math.min(49.9, raw))}%.
+                      </p>
+                    ) : null;
+                  })()}
                   {/* Fee difference badge */}
                   {(() => {
-                    const cur = Math.max(0, parseFloat(form.currentFee) || 0);
-                    const cmp = Math.max(0, parseFloat(form.compFee) || 0);
+                    const cur = Math.max(0, Math.min(49.9, parseFloat(form.currentFee) || 0));
+                    const cmp = Math.max(0, Math.min(49.9, parseFloat(form.compFee) || 0));
                     const diff = cur - cmp;
                     if (Math.abs(diff) < 0.001) return null;
                     const color = diff > 0 ? '#f59e0b' : '#1DB584';
@@ -593,6 +618,7 @@ export default function InvestmentFeesCalculator({
                 { label: 'Lost to Fees', value: results.lostToFees, color: '#F59E0B' },
               ];
               const totalShown = safe(results.netFV);
+              const rowsSum = rows.reduce((sum, r) => sum + safe(r.value), 0);
               return (
                 <div className="flex flex-col md:flex-row items-center gap-4 flex-1">
                   <div className="shrink-0">
@@ -605,8 +631,7 @@ export default function InvestmentFeesCalculator({
                   </div>
                   <div className="w-full md:flex-1 divide-y" style={{ borderColor: 'rgba(15,41,66,0.07)' }}>
                     {rows.map(({ label, value, color }) => {
-                      const total = safe(results.grossFV);
-                      const pct = total > 0 ? Math.round((safe(value) / total) * 100) : 0;
+                      const pct = rowsSum > 0 ? Math.round((safe(value) / rowsSum) * 100) : 0;
                       return (
                         <div key={label} className="flex items-center justify-between py-2">
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -684,7 +709,7 @@ export default function InvestmentFeesCalculator({
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 flex-1 min-h-0">
 
                   {/* Left: summary + legend */}
-                  <div className="flex flex-row sm:flex-col gap-4 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
+                  <div className="flex flex-col gap-4 sm:gap-4 sm:w-[108px] shrink-0 sm:justify-center">
                     <div className="flex flex-row sm:flex-col gap-3 sm:gap-2.5">
                       {statRows.map(({ label, value, color }) => (
                         <div key={label}>

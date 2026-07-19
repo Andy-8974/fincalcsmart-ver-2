@@ -87,10 +87,13 @@ export function buildInvestmentFeesReportData(
     : input.statusLabel === 'Watch' ? 'warning'
     : 'danger';
 
-  // Composition percentages
-  const contribPct  = input.grossFV > 0 ? input.totalContributions / input.grossFV : 0;
-  const netRetPct   = input.grossFV > 0 ? input.netReturns         / input.grossFV : 0;
-  const lostPct     = input.grossFV > 0 ? input.lostToFees         / input.grossFV : 0;
+  // Composition percentages — based on the sum of the three displayed rows
+  // (not grossFV directly) so the split stays accurate even when netReturns
+  // clamps to 0 in heavy fee-drag scenarios. Matches the UI's Portfolio Breakdown.
+  const rowsSum     = input.totalContributions + input.netReturns + input.lostToFees;
+  const contribPct  = rowsSum > 0 ? input.totalContributions / rowsSum : 0;
+  const netRetPct   = rowsSum > 0 ? input.netReturns         / rowsSum : 0;
+  const lostPct     = rowsSum > 0 ? input.lostToFees         / rowsSum : 0;
 
   const contribShare = Math.round(contribPct * 100);
   const netRetShare  = Math.round(netRetPct  * 100);
