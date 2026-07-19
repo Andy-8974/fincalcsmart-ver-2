@@ -182,7 +182,7 @@ export function safe(n: number): number {
  */
 export function computeResult(form: FormState): CalcResult {
   const balance = parseFloat(form.balance) || 0;
-  const annualRate = Math.max(0, parseFloat(form.annualRate) || 0);
+  const annualRate = Math.max(0, Math.min(99.9, parseFloat(form.annualRate) || 0));
   // Annual fees: display-only addition — not included in amortisation simulation.
   // Total fees = annualFees × number of full or partial years of repayment.
   const annualFees = Math.max(0, parseFloat(form.annualFees) || 0);
@@ -584,6 +584,14 @@ export default function DebtRepaymentCalculator({
                     suffix="%"
                     inputClassName={inputClsCompact}
                   />
+                  {(() => {
+                    const raw = parseFloat(form.annualRate);
+                    return !isNaN(raw) && (raw < 0 || raw > 99.9) ? (
+                      <p className="mt-0.5 text-[10px]" style={{ color: '#f59e0b' }}>
+                        Rate must be 0–99.9%. Using {Math.max(0, Math.min(99.9, raw))}%.
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
                 <div>
@@ -854,7 +862,13 @@ export default function DebtRepaymentCalculator({
                       transition: 'opacity 200ms ease',
                       pointerEvents: 'none',
                     }}>
-                      See How to Save {fmt(safe(result.extraPayment > 0 && result.accelInterestSaved !== null ? result.accelInterestSaved : result.accel100InterestSaved))} ↓
+                      {(() => {
+                        const activeInterestSaved = result.extraPayment > 0 && result.accelInterestSaved !== null ? result.accelInterestSaved : result.accel100InterestSaved;
+                        const activeMonthsSaved = result.extraPayment > 0 && result.accelMonthsSaved !== null ? result.accelMonthsSaved : result.accel100MonthsSaved;
+                        if (activeInterestSaved > 0) return <>See How to Save {fmt(safe(activeInterestSaved))} ↓</>;
+                        if (activeMonthsSaved > 0) return <>See How to Pay Off {activeMonthsSaved} {activeMonthsSaved === 1 ? 'Month' : 'Months'} Sooner ↓</>;
+                        return <>Unlock AI Debt Analysis ↓</>;
+                      })()}
                     </span>
                     <span style={{
                       position: 'absolute', inset: 0,
@@ -1006,9 +1020,13 @@ export default function DebtRepaymentCalculator({
                     {([1.0, 0.5, 0.0] as const).map((frac) => {
                       const yy = frac === 1.0 ? PAD_T : frac === 0.0 ? Y_FLOOR : PAD_T + CH / 2;
                       const balVal = frac * result.balance;
-                      const lbl = balVal >= 1000
+                      const lbl = balVal === 0
+                        ? '$0'
+                        : balVal >= 1000000
+                        ? `$${parseFloat((balVal / 1000000).toFixed(2))}M`
+                        : balVal >= 1000
                         ? `$${parseFloat((balVal / 1000).toFixed(1))}K`
-                        : balVal === 0 ? '$0' : `$${balVal.toFixed(0)}`;
+                        : `$${balVal.toFixed(0)}`;
                       return (
                         <text key={frac} x={PAD_L - 6} y={yy + 4} textAnchor="end"
                           fontSize={9} fill="rgba(15,41,66,0.38)"
@@ -1385,112 +1403,123 @@ export default function DebtRepaymentCalculator({
                   </div>
 
                   {/* Smart Opportunity Found — dark navy */}
-                  <div
-                    className="rounded-2xl p-3 flex flex-col"
-                    style={{ background: 'linear-gradient(145deg, #0D1B2A 0%, #0c1e3a 100%)', border: '1px solid rgba(29,181,132,0.14)', boxShadow: '0 2px 12px rgba(0,0,0,0.18)' }}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="w-4 h-4 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
-                      <span className="text-sm font-bold" style={{ color: '#1DB584' }}>Smart Opportunity Found</span>
-                    </div>
-
-                    {/* Mobile layout */}
-                    <div className="flex flex-col gap-3 mt-1 lg:hidden">
-                      <div className="rounded-xl flex items-center justify-center px-4 py-4"
-                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                        <span className="font-extrabold tabular-nums"
-                          style={{ fontSize: 'clamp(1.9rem, 9vw, 2.4rem)', color: '#1DB584', letterSpacing: '-1.5px', lineHeight: 1 }}>
-                          {fmt(safe(aiData.hasUserExtra ? (aiData.accelInterestSaved ?? 0) : aiData.accel100InterestSaved))}
+                  {(() => {
+                    const interestSaved = safe(aiData.hasUserExtra ? (aiData.accelInterestSaved ?? 0) : aiData.accel100InterestSaved);
+                    const monthsSaved = aiData.hasUserExtra ? (aiData.accelMonthsSaved ?? 0) : aiData.accel100MonthsSaved;
+                    // At a 0% rate (or other edge cases) interest saved can be $0 even though the
+                    // payoff still finishes sooner — lead with the months-saved figure instead of
+                    // a self-contradictory "$0 saved" headline.
+                    const leadWithMonths = interestSaved <= 0 && monthsSaved > 0;
+                    const extraLabel = aiData.hasUserExtra
+                      ? `with your extra ${fmtx(safe(aiData.extraPayment))}/month`
+                      : `by adding ${fmt(100)}/month to your payment`;
+                    return (
+                    <div
+                      className="rounded-2xl p-3 flex flex-col"
+                      style={{ background: 'linear-gradient(145deg, #0D1B2A 0%, #0c1e3a 100%)', border: '1px solid rgba(29,181,132,0.14)', boxShadow: '0 2px 12px rgba(0,0,0,0.18)' }}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="w-4 h-4 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
+                        <span className="text-sm font-bold" style={{ color: '#1DB584' }}>
+                          {interestSaved > 0 || monthsSaved > 0 ? 'Smart Opportunity Found' : 'No Additional Savings'}
                         </span>
                       </div>
-                      <div>
-                        <p className="text-white font-semibold text-sm">estimated interest saved</p>
-                        <p className="text-slate-400 text-xs mt-0.5">
-                          {aiData.hasUserExtra
-                            ? `with your extra ${fmtx(safe(aiData.extraPayment))}/month`
-                            : `by adding ${fmt(100)}/month to your payment`}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <div className="flex flex-col justify-center rounded-xl px-3 py-3"
-                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                          <div className="text-white font-bold tabular-nums mb-1" style={{ fontSize: '1.05rem', lineHeight: 1.2 }}>
-                            {fmtx(safe(aiData.hasUserExtra ? aiData.extraPayment : 100))}
-                            <span className="text-slate-400 font-normal text-xs">/mo</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <DollarSign className="w-3 h-3 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
-                            <span className="text-slate-400 text-xs">Extra payment</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col justify-center rounded-xl px-3 py-3"
-                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                          <div className="text-white font-bold tabular-nums mb-1" style={{ fontSize: '1.05rem', lineHeight: 1.2 }}>
-                            {aiData.hasUserExtra ? (aiData.accelMonthsSaved ?? 0) : aiData.accel100MonthsSaved}
-                            <span className="text-slate-400 font-normal text-xs"> mo</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3 h-3 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
-                            <span className="text-slate-400 text-xs">Earlier payoff</span>
-                          </div>
-                        </div>
-                      </div>
-                      {!aiData.hasUserExtra && (
-                        <p className="text-[11px] italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                          Enter a custom amount in the Extra Payment field above ↑
-                        </p>
-                      )}
-                    </div>
 
-                    {/* Desktop layout */}
-                    <div className="hidden lg:flex flex-col gap-3 mt-1 flex-1 justify-center">
-                      <div className="flex items-stretch gap-3">
-                        <div className="flex-1 min-w-0 rounded-xl flex items-center justify-center px-4 py-7"
+                      {/* Mobile layout */}
+                      <div className="flex flex-col gap-3 mt-1 lg:hidden">
+                        <div className="rounded-xl flex items-center justify-center px-4 py-4"
                           style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
                           <span className="font-extrabold tabular-nums"
-                            style={{ fontSize: 'clamp(2.0rem, 4vw, 2.7rem)', color: '#1DB584', letterSpacing: '-2px', lineHeight: 1 }}>
-                            {fmt(safe(aiData.hasUserExtra ? (aiData.accelInterestSaved ?? 0) : aiData.accel100InterestSaved))}
+                            style={{ fontSize: 'clamp(1.9rem, 9vw, 2.4rem)', color: '#1DB584', letterSpacing: '-1.5px', lineHeight: 1 }}>
+                            {leadWithMonths ? `${monthsSaved} mo` : fmt(interestSaved)}
                           </span>
                         </div>
-                        <div className="flex flex-col justify-center rounded-xl px-4 py-7 shrink-0"
-                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', minWidth: 100 }}>
-                          <div className="text-white font-bold tabular-nums mb-1.5" style={{ fontSize: '1.1rem', lineHeight: 1.2 }}>
-                            {fmtx(safe(aiData.hasUserExtra ? aiData.extraPayment : 100))}
-                            <span className="text-slate-400 font-normal" style={{ fontSize: '0.8rem' }}>/mo</span>
+                        <div>
+                          <p className="text-white font-semibold text-sm">{leadWithMonths ? 'earlier payoff' : 'estimated interest saved'}</p>
+                          <p className="text-slate-400 text-xs mt-0.5">{extraLabel}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div className="flex flex-col justify-center rounded-xl px-3 py-3"
+                            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                            <div className="text-white font-bold tabular-nums mb-1" style={{ fontSize: '1.05rem', lineHeight: 1.2 }}>
+                              {fmtx(safe(aiData.hasUserExtra ? aiData.extraPayment : 100))}
+                              <span className="text-slate-400 font-normal text-xs">/mo</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <DollarSign className="w-3 h-3 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
+                              <span className="text-slate-400 text-xs">Extra payment</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <DollarSign className="w-3 h-3 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
-                            <span className="text-slate-400 text-xs">Extra payment</span>
+                          <div className="flex flex-col justify-center rounded-xl px-3 py-3"
+                            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                            <div className="text-white font-bold tabular-nums mb-1" style={{ fontSize: '1.05rem', lineHeight: 1.2 }}>
+                              {monthsSaved}
+                              <span className="text-slate-400 font-normal text-xs"> mo</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="w-3 h-3 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
+                              <span className="text-slate-400 text-xs">Earlier payoff</span>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex flex-col justify-center rounded-xl px-4 py-7 shrink-0"
-                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', minWidth: 100 }}>
-                          <div className="text-white font-bold tabular-nums mb-1.5" style={{ fontSize: '1.1rem', lineHeight: 1.2 }}>
-                            {aiData.hasUserExtra ? (aiData.accelMonthsSaved ?? 0) : aiData.accel100MonthsSaved}
-                            <span className="text-slate-400 font-normal text-sm"> mo</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3 h-3 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
-                            <span className="text-slate-400 text-xs">Earlier payoff</span>
-                          </div>
-                        </div>
+                        {!aiData.hasUserExtra && (
+                          <p className="text-[11px] italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                            Enter a custom amount in the Extra Payment field above ↑
+                          </p>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-white font-semibold text-sm">estimated interest saved</p>
-                        <p className="text-slate-400 text-xs mt-0.5">
-                          {aiData.hasUserExtra
-                            ? <>with your extra <span className="text-slate-300 font-semibold">{fmtx(safe(aiData.extraPayment))}/month</span></>
-                            : <>by adding <span className="text-slate-300 font-semibold">{fmt(100)}/month</span> to your payment</>}
-                        </p>
-                      </div>
-                      {!aiData.hasUserExtra && (
-                        <p className="text-[11px] italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                          Enter a custom amount in the Extra Payment field above ↑
-                        </p>
-                      )}
-                    </div>
 
-                  </div>
+                      {/* Desktop layout */}
+                      <div className="hidden lg:flex flex-col gap-3 mt-1 flex-1 justify-center">
+                        <div className="flex items-stretch gap-3">
+                          <div className="flex-1 min-w-0 rounded-xl flex items-center justify-center px-4 py-7"
+                            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                            <span className="font-extrabold tabular-nums"
+                              style={{ fontSize: 'clamp(2.0rem, 4vw, 2.7rem)', color: '#1DB584', letterSpacing: '-2px', lineHeight: 1 }}>
+                              {leadWithMonths ? `${monthsSaved} mo` : fmt(interestSaved)}
+                            </span>
+                          </div>
+                          <div className="flex flex-col justify-center rounded-xl px-4 py-7 shrink-0"
+                            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', minWidth: 100 }}>
+                            <div className="text-white font-bold tabular-nums mb-1.5" style={{ fontSize: '1.1rem', lineHeight: 1.2 }}>
+                              {fmtx(safe(aiData.hasUserExtra ? aiData.extraPayment : 100))}
+                              <span className="text-slate-400 font-normal" style={{ fontSize: '0.8rem' }}>/mo</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <DollarSign className="w-3 h-3 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
+                              <span className="text-slate-400 text-xs">Extra payment</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col justify-center rounded-xl px-4 py-7 shrink-0"
+                            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', minWidth: 100 }}>
+                            <div className="text-white font-bold tabular-nums mb-1.5" style={{ fontSize: '1.1rem', lineHeight: 1.2 }}>
+                              {monthsSaved}
+                              <span className="text-slate-400 font-normal text-sm"> mo</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="w-3 h-3 shrink-0" style={{ color: '#1DB584' }} aria-hidden />
+                              <span className="text-slate-400 text-xs">Earlier payoff</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-sm">{leadWithMonths ? 'earlier payoff' : 'estimated interest saved'}</p>
+                          <p className="text-slate-400 text-xs mt-0.5">
+                            {aiData.hasUserExtra
+                              ? <>with your extra <span className="text-slate-300 font-semibold">{fmtx(safe(aiData.extraPayment))}/month</span></>
+                              : <>by adding <span className="text-slate-300 font-semibold">{fmt(100)}/month</span> to your payment</>}
+                          </p>
+                        </div>
+                        {!aiData.hasUserExtra && (
+                          <p className="text-[11px] italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                            Enter a custom amount in the Extra Payment field above ↑
+                          </p>
+                        )}
+                      </div>
+
+                    </div>
+                    );
+                  })()}
                 </div>
               )}
 

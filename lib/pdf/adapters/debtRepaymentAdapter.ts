@@ -90,7 +90,7 @@ export function buildDebtRepaymentReportData(
     ? `With your extra ${fmtx(input.extraPayment)}/month (total ${fmtx(input.monthlyPayment + input.extraPayment)}/month), you pay off in ${yearsMonths(input.extraMonths)} (by ${input.extraDebtFreeStr ?? '—'}), saving ${fmt(input.extraInterestSaved)} in interest.`
     : `Adding just ${fmtx(100)}/month to your payment would save ${fmt(input.accel100InterestSaved)} in interest and eliminate the debt ${yearsMonths(input.accel100MonthsSaved)} earlier (by ${input.accel100DebtFreeStr}).`;
 
-  const p2 = `Acceleration opportunity: ${extraP} In month 1, ${fmtx(input.principalPerPayment)} of each payment reduces the principal and ${fmtx(input.monthlyInterestCharge)} covers interest. As the balance falls, more of each payment goes to principal.${input.annualFees > 0 ? ` Annual fees of ${fmt(input.annualFees)} are included in the payoff calculation.` : ''}`;
+  const p2 = `Acceleration opportunity: ${extraP} In month 1, ${fmtx(input.principalPerPayment)} of each payment reduces the principal and ${fmtx(input.monthlyInterestCharge)} covers interest. As the balance falls, more of each payment goes to principal.${input.annualFees > 0 ? ` Annual fees of ${fmt(input.annualFees)} are shown as an additional cost alongside the payoff and do not affect the payoff timeline.` : ''}`;
 
   const p3 = `Interest rate (${input.annualRate}%) is the key cost driver. Every point of rate reduction meaningfully lowers total interest. If you have multiple debts, prioritize higher-rate balances first (avalanche method) to minimize total interest. This calculator models a single debt with monthly compounding -- consolidation or balance transfer scenarios require separate modeling.`;
 
@@ -176,7 +176,7 @@ export function buildDebtRepaymentReportData(
     methodology: {
       whatItDoes: [
         `Simulates month-by-month debt repayment with monthly compounding: interest = (annualRate / 12) x balance. Each payment first covers accrued interest; the remainder reduces principal. Simulation continues until balance reaches $0.`,
-        `Annual fees (if entered) are distributed as a monthly charge added to each payment obligation.`,
+        `Annual fees (if entered) are displayed as an additional cost total but do not affect the payoff simulation -- only the balance, rate, and payment amounts drive the payoff timeline.`,
         `Acceleration scenarios computed by adding $100/month (fixed comparison) or the user-entered extra payment to the base monthly payment and re-running the simulation.`,
       ],
       notModeled: [
