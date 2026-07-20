@@ -49,6 +49,8 @@ interface WithdrawalResults {
   yearsLasting:         number;       // years withdrawals ran before depletion/horizon
   depletionAge:         number | null; // null = never depleted within horizon
   depleted:             boolean;
+  targetReached:        boolean;      // depleted, but stopped at a positive target reserve (not true $0 depletion)
+  noWithdrawalPhase:    boolean;      // horizon ended before any withdrawal year was simulated
   snapshots:            YearSnapshot[];
   // Key outputs
   firstYearRate:        number;        // annualWithdrawal / currentSavings
@@ -58,10 +60,13 @@ interface WithdrawalResults {
   totalWithdrawn:       number;
   remainingBalance:     number;        // balance at end of sim
   // Sustainability
-  sustainabilityStatus: 'Sustainable' | 'Watch' | 'At Risk' | 'Depleted';
-  sustainabilityScore:  number;        // 0–100
+  sustainabilityStatus: 'Sustainable' | 'Watch' | 'At Risk' | 'Depleted' | 'Target Balance Reached' | 'No Withdrawal Phase Simulated';
+  sustainabilityScore:  number;        // 0–100 (raw internal value — not meaningful for targetReached/noWithdrawalPhase, see sustainabilityScoreDisplay)
+  sustainabilityScoreRated: boolean;   // false when the numeric score should NOT be shown as meaningful (targetReached or noWithdrawalPhase)
+  sustainabilityScoreDisplay: string;  // what to actually render in place of the number: "Goal Met" / "Not Rated" / the numeric score
   sustainabilityColor:  string;
   sustainabilityBg:     string;
+  sustainabilityRgb:    string;        // "r,g,b" channel triple matching sustainabilityColor, for inline rgba() use
   // Smart insight
   rateLabel:            'Conservative' | 'Moderate / Watch' | 'Elevated Pressure';
   rateColor:            string;
@@ -151,7 +156,9 @@ function runSimulation(
       balance = balance + growth;
       balance = balance - thisWithdrawal;
       if (balance <= target) {
-        totalWithdrawn += Math.max(0, thisWithdrawal - Math.max(0, target - (balance + thisWithdrawal - growth)));
+        // Actual funds available to withdraw this year, capped at the pre-withdrawal
+        // balance minus the target floor (mirrors the Beginning-of-Year branch above).
+        totalWithdrawn += Math.max(0, balance + thisWithdrawal - target);
         balance = target;
         snapshots.push({ year: y, age, balance: safe(balance), withdrawal: safe(thisWithdrawal), growth: safe(growth), totalWithdrawn: safe(totalWithdrawn) });
         depleted = true;
@@ -213,9 +220,18 @@ function computeResults(form: FormState, timing: TimingKey): WithdrawalResults |
   const totalWithdrawn = safe(lastSnap.totalWithdrawn);
   const remainingBalance = depleted ? safe(targetEndingBalance) : finalBalance;
 
+  // A positive Target Ending Balance was reached — this is a preserved reserve, not true depletion.
+  const targetReached = depleted && targetEndingBalance > 0;
+  // The modeled horizon ended entirely within the deferral phase — no withdrawal year was ever simulated.
+  const noWithdrawalPhase = !depleted && yearsLasting === 0;
+
   // Sustainability status
   let sustainabilityStatus: WithdrawalResults['sustainabilityStatus'];
-  if (!depleted) {
+  if (targetReached) {
+    sustainabilityStatus = 'Target Balance Reached';
+  } else if (noWithdrawalPhase) {
+    sustainabilityStatus = 'No Withdrawal Phase Simulated';
+  } else if (!depleted) {
     sustainabilityStatus = 'Sustainable';
   } else if (yearsLasting >= 30) {
     sustainabilityStatus = 'Sustainable';
@@ -250,12 +266,27 @@ function computeResults(form: FormState, timing: TimingKey): WithdrawalResults |
   else if (firstYearRatePct > 5) score = Math.max(0, score - 10);
   const sustainabilityScore = Math.round(clamp(score, 0, 100));
 
+  // The numeric score is not a meaningful assessment for these two special states —
+  // present a state-appropriate label instead (score formula/thresholds above are unchanged).
+  const sustainabilityScoreRated = !targetReached && !noWithdrawalPhase;
+  const sustainabilityScoreDisplay = targetReached
+    ? 'Goal Met'
+    : noWithdrawalPhase
+      ? 'Not Rated'
+      : `${sustainabilityScore}`;
+
   const sustainabilityColor =
-    sustainabilityStatus === 'Sustainable' ? '#1DB584' :
-    sustainabilityStatus === 'Watch'       ? '#f59e0b' : '#ef4444';
+    sustainabilityStatus === 'Sustainable' || sustainabilityStatus === 'Target Balance Reached' ? '#1DB584' :
+    sustainabilityStatus === 'Watch'                                                            ? '#f59e0b' :
+    sustainabilityStatus === 'No Withdrawal Phase Simulated'                                     ? '#64748b' : '#ef4444';
   const sustainabilityBg =
-    sustainabilityStatus === 'Sustainable' ? 'rgba(29,181,132,0.10)' :
-    sustainabilityStatus === 'Watch'       ? 'rgba(245,158,11,0.10)' : 'rgba(239,68,68,0.10)';
+    sustainabilityStatus === 'Sustainable' || sustainabilityStatus === 'Target Balance Reached' ? 'rgba(29,181,132,0.10)' :
+    sustainabilityStatus === 'Watch'                                                            ? 'rgba(245,158,11,0.10)' :
+    sustainabilityStatus === 'No Withdrawal Phase Simulated'                                     ? 'rgba(100,116,139,0.10)' : 'rgba(239,68,68,0.10)';
+  const sustainabilityRgb =
+    sustainabilityStatus === 'Sustainable' || sustainabilityStatus === 'Target Balance Reached' ? '29,181,132' :
+    sustainabilityStatus === 'Watch'                                                            ? '245,158,11' :
+    sustainabilityStatus === 'No Withdrawal Phase Simulated'                                     ? '100,116,139' : '239,68,68';
 
   // Rate label
   const rateLabel: WithdrawalResults['rateLabel'] =
@@ -269,7 +300,11 @@ function computeResults(form: FormState, timing: TimingKey): WithdrawalResults |
   // Key driver
   let keyDriver: string;
   const returnVsInflation = annualReturnPct - inflationRatePct;
-  if (firstYearRatePct > 5) {
+  if (noWithdrawalPhase) {
+    keyDriver = 'deferred withdrawal start beyond the simulation horizon';
+  } else if (targetReached) {
+    keyDriver = 'target balance preservation';
+  } else if (firstYearRatePct > 5) {
     keyDriver = 'withdrawal rate pressure';
   } else if (returnVsInflation < 1.5 && inflationRatePct > 2) {
     keyDriver = 'inflation pressure';
@@ -308,10 +343,11 @@ function computeResults(form: FormState, timing: TimingKey): WithdrawalResults |
   return {
     currentSavings, annualWithdrawal, annualReturn: annualReturnPct,
     inflationRate: inflationRatePct, currentAge, withdrawalStartAge, targetEndingBalance, timing,
-    yearsLasting, depletionAge, depleted, snapshots,
+    yearsLasting, depletionAge, depleted, targetReached, noWithdrawalPhase, snapshots,
     firstYearRate, withdrawalAtYear10, withdrawalAtYear20, withdrawalAtYear30,
     totalWithdrawn, remainingBalance,
-    sustainabilityStatus, sustainabilityScore, sustainabilityColor, sustainabilityBg,
+    sustainabilityStatus, sustainabilityScore, sustainabilityScoreRated, sustainabilityScoreDisplay,
+    sustainabilityColor, sustainabilityBg, sustainabilityRgb,
     rateLabel, rateColor, keyDriver,
     pressureScore, pressureStatus, pressureColor, pressureBg,
   };
@@ -399,6 +435,8 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
         withdrawalAtYear30:   results.withdrawalAtYear30,
         totalWithdrawn:       results.totalWithdrawn,
         remainingBalance:     results.remainingBalance,
+        targetReached:        results.targetReached,
+        noWithdrawalPhase:    results.noWithdrawalPhase,
         sustainabilityStatus: results.sustainabilityStatus,
         sustainabilityScore:  results.sustainabilityScore,
         pressureScore:        results.pressureScore,
@@ -604,9 +642,9 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
             className="flex flex-col h-full p-5 md:p-6 rounded-[20px]"
             style={{
               background: 'linear-gradient(150deg, #0D2137 0%, #0A1628 55%, #0D1B2A 100%)',
-              border: `1px solid ${results ? (results.sustainabilityStatus === 'Sustainable' ? 'rgba(29,181,132,0.22)' : results.sustainabilityStatus === 'Watch' ? 'rgba(245,158,11,0.22)' : 'rgba(239,68,68,0.22)') : 'rgba(29,181,132,0.22)'}`,
+              border: `1px solid rgba(${results ? results.sustainabilityRgb : '29,181,132'},0.22)`,
               minHeight: 340,
-              boxShadow: `0 4px 24px rgba(0,0,0,0.18), 0 1px 4px ${results ? (results.sustainabilityStatus === 'Sustainable' ? 'rgba(29,181,132,0.08)' : results.sustainabilityStatus === 'Watch' ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.08)') : 'rgba(29,181,132,0.08)'}`,
+              boxShadow: `0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(${results ? results.sustainabilityRgb : '29,181,132'},0.08)`,
             }}
           >
             {!results && (
@@ -623,10 +661,12 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                 {/* Hero */}
                 <div
                   className="rounded-xl p-4"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${results.sustainabilityStatus === 'Sustainable' ? 'rgba(29,181,132,0.18)' : results.sustainabilityStatus === 'Watch' ? 'rgba(245,158,11,0.18)' : 'rgba(239,68,68,0.18)'}` }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid rgba(${results.sustainabilityRgb},0.18)` }}
                 >
-                  <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: results.sustainabilityStatus === 'Sustainable' ? 'rgba(29,181,132,0.7)' : results.sustainabilityStatus === 'Watch' ? 'rgba(245,158,11,0.7)' : 'rgba(239,68,68,0.7)' }}>
-                    {results.depleted ? 'Portfolio Depletes At' : 'Portfolio Lasts Through'}
+                  <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: `rgba(${results.sustainabilityRgb},0.7)` }}>
+                    {results.noWithdrawalPhase ? 'No Withdrawal Phase Simulated' :
+                     results.targetReached     ? 'Target Balance Reached At' :
+                     results.depleted          ? 'Portfolio Depletes At' : 'Portfolio Lasts Through'}
                   </p>
                   <p style={{ color: results.sustainabilityColor, fontSize: '36px', fontWeight: 800, letterSpacing: '-2px', lineHeight: 1, marginTop: 6 }}>
                     {results.depleted
@@ -634,9 +674,13 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                       : `Age ${results.currentAge + MAX_HORIZON}+`}
                   </p>
                   <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '11px', marginTop: 4, fontWeight: 500 }}>
-                    {results.depleted
-                      ? `${results.yearsLasting} year${results.yearsLasting !== 1 ? 's' : ''} of withdrawals · depletes at age ${results.depletionAge}`
-                      : `lasts ${results.yearsLasting} withdrawal years · ending balance ${fmtShort(results.remainingBalance)}`}
+                    {results.noWithdrawalPhase
+                      ? `withdrawals start at age ${results.withdrawalStartAge} — beyond the ${MAX_HORIZON}-year horizon`
+                      : results.targetReached
+                        ? `${results.yearsLasting} year${results.yearsLasting !== 1 ? 's' : ''} of withdrawals · reaches target balance at age ${results.depletionAge}`
+                        : results.depleted
+                          ? `${results.yearsLasting} year${results.yearsLasting !== 1 ? 's' : ''} of withdrawals · depletes at age ${results.depletionAge}`
+                          : `lasts ${results.yearsLasting} withdrawal years · ending balance ${fmtShort(results.remainingBalance)}`}
                   </p>
                 </div>
 
@@ -664,7 +708,7 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                     <span className="text-[13px] text-slate-300">
                       {results.depleted ? 'Ending Balance' : 'Remaining at Horizon'}
                     </span>
-                    <span className="text-[13px] font-semibold" style={{ color: results.depleted ? '#94a3b8' : '#1DB584' }}>
+                    <span className="text-[13px] font-semibold" style={{ color: results.depleted && !results.targetReached ? '#94a3b8' : '#1DB584' }}>
                       {results.depleted && results.targetEndingBalance === 0 ? '—' : fmt(results.remainingBalance)}
                     </span>
                   </div>
@@ -673,19 +717,27 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                 {/* Status pill */}
                 {(() => {
                   const s =
-                    results.sustainabilityStatus === 'Sustainable' ? { bg: 'rgba(29,181,132,0.15)',  border: 'rgba(29,181,132,0.35)', color: '#1DB584'  } :
+                    results.sustainabilityStatus === 'Sustainable' || results.sustainabilityStatus === 'Target Balance Reached'
+                                                                    ? { bg: 'rgba(29,181,132,0.15)',  border: 'rgba(29,181,132,0.35)', color: '#1DB584'  } :
                     results.sustainabilityStatus === 'Watch'       ? { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.30)', color: '#f59e0b'  } :
                     results.sustainabilityStatus === 'At Risk'     ? { bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.28)', color: '#ef4444'  } :
+                    results.sustainabilityStatus === 'No Withdrawal Phase Simulated'
+                                                                    ? { bg: 'rgba(100,116,139,0.15)', border: 'rgba(100,116,139,0.35)', color: '#64748b' } :
                     { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.35)', color: '#ef4444' };
+                  const showCheck = (results.targetReached || !results.depleted) && !results.noWithdrawalPhase;
                   return (
                     <div className="flex items-center justify-center rounded-xl py-2 px-3"
                       style={{ background: s.bg, border: `1px solid ${s.border}` }}>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: s.color }}>
-                        {!results.depleted ? '✓ ' : ''}
+                        {showCheck ? '✓ ' : ''}
                         {results.sustainabilityStatus}
-                        {!results.depleted
-                          ? ` · Lasts ${MAX_HORIZON}+ years`
-                          : ` · Depletes Age ${results.depletionAge}`}
+                        {results.noWithdrawalPhase
+                          ? ` · Starts Age ${results.withdrawalStartAge}`
+                          : results.targetReached
+                            ? ` · Reaches Target Age ${results.depletionAge}`
+                            : !results.depleted
+                              ? ` · Lasts ${MAX_HORIZON}+ years`
+                              : ` · Depletes Age ${results.depletionAge}`}
                       </span>
                     </div>
                   );
@@ -799,7 +851,7 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
 
               // Bar color (pressure-aware gradient when depleted)
               const getBarColor = (balance: number): string => {
-                if (!results.depleted) return '#1DB584';
+                if (!results.depleted || results.targetReached) return '#1DB584';
                 const ratio = balance / results.currentSavings;
                 if (ratio > 0.45) return '#1DB584';
                 if (ratio > 0.18) return '#f59e0b';
@@ -869,7 +921,7 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
 
                       {/* Overlay line */}
                       <polyline points={linePts} fill="none"
-                        stroke={results.depleted ? '#ef4444' : '#1DB584'}
+                        stroke={results.depleted && !results.targetReached ? '#ef4444' : '#1DB584'}
                         strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" opacity={0.65} />
 
                       {/* Dots on bar tops */}
@@ -878,11 +930,13 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                           fill={getBarColor(d.balance)} stroke="white" strokeWidth="1" />
                       ))}
 
-                      {/* Depletion marker */}
+                      {/* Depletion / target-reached marker */}
                       {results.depleted && (() => {
                         const cx = xOf(n - 1);
                         const cy = yOf(barData[n - 1].balance);
-                        const pillW = 62, pillH = 28;
+                        const markerColor = results.targetReached ? '#1DB584' : '#ef4444';
+                        const markerLabel = results.targetReached ? 'TARGET MET' : 'DEPLETED';
+                        const pillW = results.targetReached ? 74 : 62, pillH = 28;
                         const pillX = Math.max(PAD_L, Math.min(CW - PAD_R - pillW, cx - pillW / 2));
                         const pillY = Math.max(PAD_T - 10, cy - 42);
                         const midX  = (pillX + pillW / 2).toFixed(1);
@@ -890,10 +944,10 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                           <>
                             <line x1={cx.toFixed(1)} y1={PAD_T.toFixed(1)}
                                   x2={cx.toFixed(1)} y2={(baseY - Math.max(2, baseY - cy)).toFixed(1)}
-                              stroke="rgba(239,68,68,0.3)" strokeWidth="1" strokeDasharray="4 3" />
-                            <rect x={pillX.toFixed(1)} y={pillY.toFixed(1)} width={pillW} height={pillH} rx="5" fill="#ef4444" />
+                              stroke={results.targetReached ? 'rgba(29,181,132,0.3)' : 'rgba(239,68,68,0.3)'} strokeWidth="1" strokeDasharray="4 3" />
+                            <rect x={pillX.toFixed(1)} y={pillY.toFixed(1)} width={pillW} height={pillH} rx="5" fill={markerColor} />
                             <text textAnchor="middle" fill="white">
-                              <tspan x={midX} y={(pillY + 11).toFixed(1)} fontSize="7.5" fontWeight="600" opacity="0.85">DEPLETED</tspan>
+                              <tspan x={midX} y={(pillY + 11).toFixed(1)} fontSize="7.5" fontWeight="600" opacity="0.85">{markerLabel}</tspan>
                               <tspan x={midX} y={(pillY + 22).toFixed(1)} fontSize="11" fontWeight="800">Age {results.depletionAge}</tspan>
                             </text>
                           </>
@@ -941,7 +995,7 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                   {/* Chart legend */}
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-3 rounded-sm" style={{ background: results.depleted ? '#ef4444' : '#1DB584', opacity: 0.85 }} />
+                      <div className="w-5 h-3 rounded-sm" style={{ background: results.depleted && !results.targetReached ? '#ef4444' : '#1DB584', opacity: 0.85 }} />
                       <span style={{ fontSize: '10.5px', color: '#6B7A8D' }}>Portfolio Balance</span>
                     </div>
                     {hasDeferral && (
@@ -950,7 +1004,13 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                         <span style={{ fontSize: '10.5px', color: '#6B7A8D' }}>Deferral Phase</span>
                       </div>
                     )}
-                    {results.depleted && (
+                    {results.depleted && results.targetReached && (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full" style={{ background: '#1DB584' }} />
+                        <span style={{ fontSize: '10.5px', color: '#6B7A8D' }}>Target Reached</span>
+                      </div>
+                    )}
+                    {results.depleted && !results.targetReached && (
                       <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full" style={{ background: '#ef4444' }} />
                         <span style={{ fontSize: '10.5px', color: '#6B7A8D' }}>Depletion Point</span>
@@ -991,7 +1051,7 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
             {results && (() => {
               const SEMI_R = 88, CX = 104, CY = 100;
               const SEMI_C = Math.PI * SEMI_R;
-              const ratio   = results.sustainabilityScore / 100;
+              const ratio   = results.targetReached ? 1 : results.noWithdrawalPhase ? 0 : results.sustainabilityScore / 100;
               const fillAmt = ratio * SEMI_C;
               const trackPath = `M ${CX - SEMI_R} ${CY} A ${SEMI_R} ${SEMI_R} 0 0 1 ${CX + SEMI_R} ${CY}`;
               const gc = results.sustainabilityColor;
@@ -1018,10 +1078,15 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                         position: 'absolute', bottom: 0, left: 0, right: 0,
                         display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 0,
                       }}>
-                        <span style={{ fontSize: '2rem', fontWeight: 800, color: gc, lineHeight: 1 }}>
-                          {results.sustainabilityScore}
+                        <span style={{
+                          fontSize: results.sustainabilityScoreRated ? '2rem' : '1.15rem',
+                          fontWeight: 800, color: gc, lineHeight: 1.1, textAlign: 'center', padding: '0 8px',
+                        }}>
+                          {results.sustainabilityScoreDisplay}
                         </span>
-                        <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 500, marginTop: 2 }}>/ 100</span>
+                        {results.sustainabilityScoreRated && (
+                          <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 500, marginTop: 2 }}>/ 100</span>
+                        )}
                       </div>
                     </div>
                     <span className="mt-2 px-3 py-1 rounded-full text-xs font-bold" style={{ background: gb, color: gc }}>
@@ -1033,13 +1098,13 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                     <div className="flex items-center justify-between py-1">
                       <span style={{ color: '#4B5563', fontSize: '12.5px' }}>Years Portfolio Lasts</span>
                       <span className="font-bold" style={{ color: gc, fontSize: '12.5px' }}>
-                        {results.depleted ? `${results.yearsLasting} yr` : `${MAX_HORIZON}+ yr`}
+                        {results.noWithdrawalPhase ? '0 yr' : results.depleted ? `${results.yearsLasting} yr` : `${MAX_HORIZON}+ yr`}
                       </span>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <span style={{ color: '#4B5563', fontSize: '12.5px' }}>Depletion Age</span>
-                      <span className="font-semibold" style={{ color: results.depleted ? '#ef4444' : '#1DB584', fontSize: '12.5px' }}>
-                        {results.depleted ? `Age ${results.depletionAge}` : 'Lasts through horizon'}
+                      <span style={{ color: '#4B5563', fontSize: '12.5px' }}>{results.noWithdrawalPhase ? 'Withdrawal Status' : 'Depletion Age'}</span>
+                      <span className="font-semibold" style={{ color: results.noWithdrawalPhase ? '#64748b' : results.targetReached ? '#1DB584' : results.depleted ? '#ef4444' : '#1DB584', fontSize: '12.5px' }}>
+                        {results.noWithdrawalPhase ? 'Not simulated' : results.depleted ? `Age ${results.depletionAge}` : 'Lasts through horizon'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between py-1">
@@ -1056,7 +1121,11 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                     </div>
                     <div className="pt-1 pb-0.5">
                       <p className="text-[10.5px] leading-relaxed" style={{ color: '#94a3b8', fontStyle: 'italic' }}>
-                        Score reflects years lasting, withdrawal rate, and horizon coverage. Assumes {results.annualReturn}% return and {results.inflationRate}% inflation. Actual results vary.
+                        {results.targetReached
+                          ? 'Your target ending balance was reached before depletion, so a sustainability score is not applicable — this is a positive outcome.'
+                          : results.noWithdrawalPhase
+                            ? 'No withdrawal years occurred within the simulation horizon, so a sustainability score could not be evaluated.'
+                            : <>Score reflects years lasting, withdrawal rate, and horizon coverage. Assumes {results.annualReturn}% return and {results.inflationRate}% inflation. Actual results vary.</>}
                       </p>
                     </div>
                   </div>
@@ -1228,11 +1297,13 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
 
                 {/* Right — Dark smart card */}
                 <div className="rounded-2xl p-3 flex flex-col"
-                  style={{ background: 'linear-gradient(145deg, #0D1B2A 0%, #0c1e3a 100%)', border: `1px solid ${results.sustainabilityStatus === 'Sustainable' ? 'rgba(29,181,132,0.14)' : results.sustainabilityStatus === 'Watch' ? 'rgba(245,158,11,0.14)' : 'rgba(239,68,68,0.14)'}`, boxShadow: '0 2px 12px rgba(0,0,0,0.18)' }}>
+                  style={{ background: 'linear-gradient(145deg, #0D1B2A 0%, #0c1e3a 100%)', border: `1px solid rgba(${results.sustainabilityRgb},0.14)`, boxShadow: '0 2px 12px rgba(0,0,0,0.18)' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingDown className="w-4 h-4 shrink-0" style={{ color: results.sustainabilityColor }} aria-hidden />
                     <span className="text-sm font-bold" style={{ color: results.sustainabilityColor }}>
-                      {results.sustainabilityStatus === 'Sustainable' ? 'Sustainable Drawdown' :
+                      {results.noWithdrawalPhase ? 'No Withdrawal Phase Simulated' :
+                       results.targetReached     ? 'Target Balance Reached' :
+                       results.sustainabilityStatus === 'Sustainable' ? 'Sustainable Drawdown' :
                        results.sustainabilityStatus === 'Watch'       ? 'Watchlist — Monitor Closely' :
                        results.sustainabilityStatus === 'At Risk'     ? 'At Risk — Review Plan' :
                        'High Depletion Risk'}
@@ -1243,23 +1314,27 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
                     <div className="rounded-xl flex items-center justify-center px-4 py-5"
                       style={{
                         background: results.sustainabilityBg,
-                        border: `1px solid ${results.sustainabilityStatus === 'Sustainable' ? 'rgba(29,181,132,0.25)' : results.sustainabilityStatus === 'Watch' ? 'rgba(245,158,11,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                        border: `1px solid rgba(${results.sustainabilityRgb},0.25)`,
                       }}>
                       <div className="text-center">
                         <span className="font-extrabold tabular-nums"
                           style={{ fontSize: 'clamp(1.6rem, 6vw, 2.2rem)', color: results.sustainabilityColor, letterSpacing: '-1.5px', lineHeight: 1 }}>
-                          {results.depleted ? `Age ${results.depletionAge}` : `Age ${results.currentAge + MAX_HORIZON}+`}
+                          {results.noWithdrawalPhase ? `Age ${results.withdrawalStartAge}` : results.depleted ? `Age ${results.depletionAge}` : `Age ${results.currentAge + MAX_HORIZON}+`}
                         </span>
-                        <p style={{ fontSize: '10px', color: results.sustainabilityStatus === 'Sustainable' ? 'rgba(29,181,132,0.7)' : results.sustainabilityStatus === 'Watch' ? 'rgba(245,158,11,0.7)' : 'rgba(239,68,68,0.7)', fontWeight: 600, marginTop: 4 }}>
-                          {results.depleted ? 'portfolio depletes' : 'portfolio lasts beyond'}
+                        <p style={{ fontSize: '10px', color: `rgba(${results.sustainabilityRgb},0.7)`, fontWeight: 600, marginTop: 4 }}>
+                          {results.noWithdrawalPhase ? 'withdrawals not yet started' : results.targetReached ? 'target balance reached' : results.depleted ? 'portfolio depletes' : 'portfolio lasts beyond'}
                         </p>
                       </div>
                     </div>
                     <div>
                       <p className="text-white font-semibold text-sm">
-                        {results.depleted
-                          ? `Savings may last until age ${results.depletionAge} — ${results.yearsLasting} withdrawal years`
-                          : `Portfolio lasts through age ${results.currentAge + MAX_HORIZON}+`}
+                        {results.noWithdrawalPhase
+                          ? `Withdrawals begin at age ${results.withdrawalStartAge} — beyond the ${MAX_HORIZON}-year simulation horizon`
+                          : results.targetReached
+                            ? `Portfolio reaches your target balance at age ${results.depletionAge} — ${results.yearsLasting} withdrawal years`
+                            : results.depleted
+                              ? `Savings may last until age ${results.depletionAge} — ${results.yearsLasting} withdrawal years`
+                              : `Portfolio lasts through age ${results.currentAge + MAX_HORIZON}+`}
                       </p>
                       <p className="text-slate-400 text-xs mt-0.5">
                         Key driver: {results.keyDriver}. At {results.annualReturn}% return, {results.inflationRate}% inflation, {(results.firstYearRate * 100).toFixed(1)}% first-year withdrawal rate.
@@ -1343,32 +1418,46 @@ export default function RetirementWithdrawalCalculator({ formulaContent, faqItem
 
                 {/* Card 3 — Longevity Buffer */}
                 <div className="rounded-2xl p-4" style={{
-                  background: results.depleted ? '#fff7ed' : '#f0fdf4',
-                  border: `1px solid ${results.depleted ? '#fed7aa' : '#bbf7d0'}`,
+                  background: results.noWithdrawalPhase ? '#f8fafc' : results.depleted && !results.targetReached ? '#fff7ed' : '#f0fdf4',
+                  border: `1px solid ${results.noWithdrawalPhase ? '#e2e8f0' : results.depleted && !results.targetReached ? '#fed7aa' : '#bbf7d0'}`,
                 }}>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="flex items-center justify-center shrink-0"
-                      style={{ width: 28, height: 28, borderRadius: 8, background: results.depleted ? '#ffedd5' : '#dcfce7' }}>
-                      <AlertTriangle className={`w-3.5 h-3.5 ${results.depleted ? 'text-orange-500' : 'text-emerald-500'}`} aria-hidden />
+                      style={{ width: 28, height: 28, borderRadius: 8, background: results.noWithdrawalPhase ? '#e2e8f0' : results.depleted && !results.targetReached ? '#ffedd5' : '#dcfce7' }}>
+                      <AlertTriangle className={`w-3.5 h-3.5 ${results.noWithdrawalPhase ? 'text-slate-500' : results.depleted && !results.targetReached ? 'text-orange-500' : 'text-emerald-500'}`} aria-hidden />
                     </span>
-                    <p className={`text-xs font-bold uppercase tracking-widest ${results.depleted ? 'text-orange-600' : 'text-emerald-600'}`}>
+                    <p className={`text-xs font-bold uppercase tracking-widest ${results.noWithdrawalPhase ? 'text-slate-500' : results.depleted && !results.targetReached ? 'text-orange-600' : 'text-emerald-600'}`}>
                       Longevity Buffer
                     </p>
                   </div>
                   <p className="text-sm text-slate-700 leading-relaxed">
-                    {results.depleted
+                    {results.noWithdrawalPhase
                       ? <>
-                          At current inputs, your portfolio is estimated to deplete at{' '}
-                          <strong className="text-orange-700">age {results.depletionAge}</strong> after{' '}
-                          <strong className="text-orange-700">{results.yearsLasting} years</strong> of withdrawals.{' '}
-                          If you live into your 80s or 90s, there may be a gap between portfolio depletion and end of life. This is a key longevity risk to plan around. Review your withdrawal rate, return assumption, or other income sources.
+                          Your withdrawal phase does not begin until{' '}
+                          <strong className="text-slate-600">age {results.withdrawalStartAge}</strong>, which falls beyond the {MAX_HORIZON}-year simulation horizon from your current age.{' '}
+                          No withdrawal years were modeled, so longevity cannot be assessed yet. Lower your withdrawal start age or revisit this calculator closer to that date.
                         </>
-                      : <>
-                          At current inputs, your portfolio lasts through{' '}
-                          <strong className="text-emerald-700">age {results.currentAge + MAX_HORIZON}+</strong> — beyond the 50-year simulation horizon.{' '}
-                          Total withdrawn: <strong className="text-emerald-700">{fmt(safe(results.totalWithdrawn))}</strong> with an ending balance of{' '}
-                          <strong className="text-emerald-700">{fmt(safe(results.remainingBalance))}</strong>. Your plan has significant longevity buffer at current inputs.
-                        </>
+                      : results.targetReached
+                        ? <>
+                            At current inputs, your portfolio reaches your target balance at{' '}
+                            <strong className="text-emerald-700">age {results.depletionAge}</strong> after{' '}
+                            <strong className="text-emerald-700">{results.yearsLasting} years</strong> of withdrawals, preserving your chosen reserve rather than depleting.{' '}
+                            Total withdrawn: <strong className="text-emerald-700">{fmt(safe(results.totalWithdrawn))}</strong> with a remaining balance of{' '}
+                            <strong className="text-emerald-700">{fmt(safe(results.remainingBalance))}</strong>.
+                          </>
+                        : results.depleted
+                          ? <>
+                              At current inputs, your portfolio is estimated to deplete at{' '}
+                              <strong className="text-orange-700">age {results.depletionAge}</strong> after{' '}
+                              <strong className="text-orange-700">{results.yearsLasting} years</strong> of withdrawals.{' '}
+                              If you live into your 80s or 90s, there may be a gap between portfolio depletion and end of life. This is a key longevity risk to plan around. Review your withdrawal rate, return assumption, or other income sources.
+                            </>
+                          : <>
+                              At current inputs, your portfolio lasts through{' '}
+                              <strong className="text-emerald-700">age {results.currentAge + MAX_HORIZON}+</strong> — beyond the 50-year simulation horizon.{' '}
+                              Total withdrawn: <strong className="text-emerald-700">{fmt(safe(results.totalWithdrawn))}</strong> with an ending balance of{' '}
+                              <strong className="text-emerald-700">{fmt(safe(results.remainingBalance))}</strong>. Your plan has significant longevity buffer at current inputs.
+                            </>
                     }
                     {' '}This is not financial advice. Consult a financial advisor for a complete plan.
                   </p>

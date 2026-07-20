@@ -999,6 +999,7 @@ async function main() {
       withdrawalAtYear30: Math.round(40000 * Math.pow(1 + inflRate / 100, 29)),
       totalWithdrawn: 40000 * 30 * 1.35,   // approx inflation-adjusted total
       remainingBalance: 185000,
+      targetReached: false, noWithdrawalPhase: false,
       sustainabilityStatus: 'Watch', sustainabilityScore: 68,
       pressureScore: 72, pressureStatus: 'Moderate',
       region: 'ca',
@@ -1025,6 +1026,7 @@ async function main() {
       withdrawalAtYear30: Math.round(45000 * Math.pow(1 + inflRate / 100, 29)),
       totalWithdrawn: 45000 * 17 * 1.25,
       remainingBalance: 0,
+      targetReached: false, noWithdrawalPhase: false,
       sustainabilityStatus: 'At Risk', sustainabilityScore: 34,
       pressureScore: 32, pressureStatus: 'Elevated Pressure',
       region: 'us',

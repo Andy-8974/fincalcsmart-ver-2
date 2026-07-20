@@ -26,7 +26,7 @@ const faqItems: Array<{ question: string; answer: string }> = [
   {
     question: 'Why does inflation affect my withdrawal amount over time?',
     answer:
-      'Each year, your withdrawal amount is increased by the inflation rate to maintain the same real purchasing power. For example, a $30,000 withdrawal today at 2.5% inflation becomes approximately $38,200 after 10 years and $48,800 after 20 years. This inflation compounding is a major factor in portfolio longevity — portfolios with low return rates relative to inflation can deplete significantly faster than a simple nominal calculation would suggest.',
+      'Each year, your withdrawal amount is increased by the inflation rate to maintain the same real purchasing power. For example, a $30,000 withdrawal today at 2.5% inflation becomes approximately $38,400 after 10 years and $49,200 after 20 years. This inflation compounding is a major factor in portfolio longevity — portfolios with low return rates relative to inflation can deplete significantly faster than a simple nominal calculation would suggest.',
   },
   {
     question: 'What does the Sustainability Status mean?',

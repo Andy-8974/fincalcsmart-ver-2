@@ -23,8 +23,10 @@ export interface WithdrawalAdapterInput {
   withdrawalAtYear30:  number;
   totalWithdrawn:      number;
   remainingBalance:    number;
+  targetReached:       boolean; // depleted, but stopped at a positive target reserve (not true $0 depletion)
+  noWithdrawalPhase:   boolean; // horizon ended before any withdrawal year was simulated
   // Sustainability
-  sustainabilityStatus: 'Sustainable' | 'Watch' | 'At Risk' | 'Depleted';
+  sustainabilityStatus: 'Sustainable' | 'Watch' | 'At Risk' | 'Depleted' | 'Target Balance Reached' | 'No Withdrawal Phase Simulated';
   sustainabilityScore:  number;  // 0-100
   // Pressure
   pressureScore:  number;        // 0-100
@@ -67,17 +69,27 @@ export function buildWithdrawalReportData(
 
   const firstYearRatePct = (input.firstYearRate * 100).toFixed(1);
 
-  const sustainAccent: 'teal' | 'amber' | 'red' =
-    input.sustainabilityStatus === 'Sustainable' ? 'teal' :
-    input.sustainabilityStatus === 'Watch'       ? 'amber' : 'red';
+  // Numeric sustainability score is not meaningful for these two special states —
+  // score formula/thresholds are unchanged, only the displayed text differs.
+  const sustainabilityScoreDisplay = input.targetReached
+    ? 'Goal Met'
+    : input.noWithdrawalPhase
+      ? 'Not Rated'
+      : `${input.sustainabilityScore}/100`;
+  const sustainabilityScoreRated = !input.targetReached && !input.noWithdrawalPhase;
+
+  const sustainAccent: 'teal' | 'amber' | 'red' | 'slate' =
+    input.sustainabilityStatus === 'Sustainable' || input.sustainabilityStatus === 'Target Balance Reached' ? 'teal' :
+    input.sustainabilityStatus === 'Watch'                                                                  ? 'amber' :
+    input.sustainabilityStatus === 'No Withdrawal Phase Simulated'                                          ? 'slate' : 'red';
 
   const pressureAccent: 'teal' | 'amber' | 'red' =
     input.pressureStatus === 'Conservative' || input.pressureStatus === 'Moderate' ? 'teal' :
     input.pressureStatus === 'Watch'  ? 'amber' : 'red';
 
   const statusType: 'success' | 'warning' | 'danger' =
-    input.sustainabilityStatus === 'Sustainable' ? 'success' :
-    input.sustainabilityStatus === 'Watch'       ? 'warning' : 'danger';
+    input.sustainabilityStatus === 'Sustainable' || input.sustainabilityStatus === 'Target Balance Reached' ? 'success' :
+    input.sustainabilityStatus === 'Watch' || input.sustainabilityStatus === 'No Withdrawal Phase Simulated' ? 'warning' : 'danger';
 
   // Composition bar: Total Withdrawn vs Remaining Balance (total = currentSavings as reference floor)
   const total         = Math.max(input.currentSavings, 1);
@@ -85,11 +97,15 @@ export function buildWithdrawalReportData(
   const remainingPct  = Math.max(0, 1 - withdrawnPct);
 
   // ── Insight paragraphs ────────────────────────────────────────────────────
-  const depletionText = input.depleted
-    ? `The portfolio is estimated to be depleted at age ${input.depletionAge ?? '—'} after ${input.yearsLasting} year${input.yearsLasting !== 1 ? 's' : ''} of withdrawals.`
-    : `The portfolio is estimated to last the full ${input.yearsLasting}-year simulation horizon without depletion.`;
+  const depletionText = input.noWithdrawalPhase
+    ? `Withdrawals do not begin until age ${input.withdrawalStartAge}, which falls beyond the simulation horizon, so no withdrawal years were modeled.`
+    : input.targetReached
+      ? `The portfolio reaches your target ending balance at age ${input.depletionAge ?? '—'} after ${input.yearsLasting} year${input.yearsLasting !== 1 ? 's' : ''} of withdrawals, preserving your chosen reserve.`
+      : input.depleted
+        ? `The portfolio is estimated to be depleted at age ${input.depletionAge ?? '—'} after ${input.yearsLasting} year${input.yearsLasting !== 1 ? 's' : ''} of withdrawals.`
+        : `The portfolio is estimated to last the full ${input.yearsLasting}-year simulation horizon without depletion.`;
 
-  const p1 = `Based on a starting portfolio of ${fmt(input.currentSavings)} with annual withdrawals of ${fmt(input.annualWithdrawal)} (${firstYearRatePct}% first-year withdrawal rate), the simulation projects ${input.yearsLasting} year${input.yearsLasting !== 1 ? 's' : ''} of sustainable withdrawals at ${input.annualReturn}% annual return and ${input.inflationRate}% inflation. ${depletionText} Sustainability Status: ${input.sustainabilityStatus} (Score: ${input.sustainabilityScore}/100).`;
+  const p1 = `Based on a starting portfolio of ${fmt(input.currentSavings)} with annual withdrawals of ${fmt(input.annualWithdrawal)} (${firstYearRatePct}% first-year withdrawal rate), the simulation projects ${input.yearsLasting} year${input.yearsLasting !== 1 ? 's' : ''} of sustainable withdrawals at ${input.annualReturn}% annual return and ${input.inflationRate}% inflation. ${depletionText} Sustainability Status: ${input.sustainabilityStatus}${sustainabilityScoreRated ? ` (Score: ${sustainabilityScoreDisplay}).` : '.'}`;
 
   const rateContext =
     parseFloat(firstYearRatePct) < 3.5 ? `A first-year withdrawal rate of ${firstYearRatePct}% is considered conservative. Portfolios drawing less than 3.5% annually tend to last through long retirement horizons.` :
@@ -108,9 +124,13 @@ export function buildWithdrawalReportData(
   const keyDrivers = [
     `A first-year withdrawal rate of ${firstYearRatePct}% is the primary longevity driver. ${parseFloat(firstYearRatePct) > 5 ? 'Reducing withdrawals by even 0.5% per year can materially extend portfolio life.' : 'Maintaining this rate or reducing it as returns allow improves sustainability.'}`,
     `Your ${input.inflationRate}% inflation assumption means withdrawals nearly double every ${(72 / Math.max(input.inflationRate, 0.1)).toFixed(0)} years under the Rule of 72. Inflation is a significant long-term portfolio drain.`,
-    input.depleted
-      ? `The portfolio depletes at age ${input.depletionAge}. Consider part-time income, delaying withdrawals by ${input.withdrawalStartAge > input.currentAge ? 'more years' : 'a few years'}, or a lower withdrawal rate to extend longevity.`
-      : `The portfolio survives the full ${input.yearsLasting}-year horizon, ending with approximately ${fmt(input.remainingBalance)} remaining. Maintaining your return assumption and inflation discipline preserves this outcome.`,
+    input.noWithdrawalPhase
+      ? `No withdrawal years fall within the 50-year simulation horizon. Revisit this calculator closer to age ${input.withdrawalStartAge}, or lower the withdrawal start age to model the drawdown phase.`
+      : input.targetReached
+        ? `The portfolio reaches your target ending balance at age ${input.depletionAge}, preserving approximately ${fmt(input.remainingBalance)} as a reserve. Maintaining your return assumption and inflation discipline preserves this outcome.`
+        : input.depleted
+          ? `The portfolio depletes at age ${input.depletionAge}. Consider part-time income, delaying withdrawals by ${input.withdrawalStartAge > input.currentAge ? 'more years' : 'a few years'}, or a lower withdrawal rate to extend longevity.`
+          : `The portfolio survives the full ${input.yearsLasting}-year horizon, ending with approximately ${fmt(input.remainingBalance)} remaining. Maintaining your return assumption and inflation discipline preserves this outcome.`,
   ];
 
   // ── Assemble ReportData ───────────────────────────────────────────────────
@@ -131,7 +151,7 @@ export function buildWithdrawalReportData(
         { label: 'Starting Portfolio',       value: fmt(input.currentSavings) },
         { label: 'Annual Withdrawal',         value: fmt(input.annualWithdrawal) },
         { label: 'Years Lasting',             value: `${input.yearsLasting} yr${input.yearsLasting !== 1 ? 's' : ''}`, accent: sustainAccent },
-        { label: 'Sustainability Score',      value: `${input.sustainabilityScore}/100`, sub: input.sustainabilityStatus, accent: sustainAccent },
+        { label: 'Sustainability Score',      value: sustainabilityScoreDisplay, sub: input.sustainabilityStatus, accent: sustainAccent },
         { label: 'Withdrawal Pressure Score', value: `${input.pressureScore}/100`,       sub: input.pressureStatus,       accent: pressureAccent },
       ],
       statusLabel: input.sustainabilityStatus,
@@ -171,13 +191,13 @@ export function buildWithdrawalReportData(
       title: 'Detailed Results',
       rows: [
         { label: 'Years Lasting',              value: `${input.yearsLasting}`, accent: sustainAccent },
-        { label: 'Depletion Age',              value: input.depletionAge != null ? `Age ${input.depletionAge}` : 'Not depleted', accent: input.depleted ? 'red' : 'teal' },
+        { label: 'Depletion Age',              value: input.noWithdrawalPhase ? 'Not simulated' : input.depletionAge != null ? `Age ${input.depletionAge}` : 'Not depleted', accent: input.depleted && !input.targetReached ? 'red' : 'teal' },
         { label: 'First-Year Withdrawal Rate', value: `${firstYearRatePct}%` },
         { label: 'Sustainability Status',      value: input.sustainabilityStatus, accent: sustainAccent },
-        { label: 'Sustainability Score',       value: `${input.sustainabilityScore}/100`, accent: sustainAccent },
+        { label: 'Sustainability Score',       value: sustainabilityScoreDisplay, accent: sustainAccent },
         { label: 'Withdrawal Pressure Score',  value: `${input.pressureScore}/100 (${input.pressureStatus})`, accent: pressureAccent },
         { label: 'Est. Total Withdrawn',       value: fmt(input.totalWithdrawn), accent: 'amber' },
-        { label: 'Remaining Balance',          value: fmt(input.remainingBalance), accent: input.depleted ? 'red' : 'teal' },
+        { label: 'Remaining Balance',          value: fmt(input.remainingBalance), accent: input.depleted && !input.targetReached ? 'red' : 'teal' },
         { label: 'Withdrawal at Year 10',      value: fmtx(input.withdrawalAtYear10) },
         { label: 'Withdrawal at Year 20',      value: fmtx(input.withdrawalAtYear20) },
         { label: 'Withdrawal at Year 30',      value: fmtx(input.withdrawalAtYear30) },
