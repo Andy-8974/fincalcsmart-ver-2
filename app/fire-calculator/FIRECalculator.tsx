@@ -662,7 +662,7 @@ export default function FIRECalculator({
                   style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(29,181,132,0.18)' }}
                 >
                   <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(29,181,132,0.7)' }}>
-                    {results.alreadyFI ? 'Portfolio at FIRE Target' : 'Projected Portfolio at FIRE'}
+                    {results.alreadyFI ? 'Portfolio at FIRE Target' : results.fireAge !== null ? 'Projected Portfolio at FIRE' : 'Projected Portfolio (20 Years)'}
                   </p>
                   <p style={{ color: '#1DB584', fontSize: '36px', fontWeight: 800, letterSpacing: '-2px', lineHeight: 1, marginTop: 6 }}>
                     {results.alreadyFI ? fmt(safe(results.currentAssets)) : fmt(safe(results.projectedAtFIRE))}
@@ -1505,8 +1505,8 @@ export default function FIRECalculator({
                       </>
                     )}.{' '}
                     {results.yearsToFIRE !== null
-                      ? `Over ${results.yearsToFIRE} year${results.yearsToFIRE !== 1 ? 's' : ''}, total contributions reach ${fmt(safe(results.totalContribs))} before investment growth.`
-                      : `At current pace, total contributions over 20 years would reach ${fmt(safe(results.totalContribs))}.`}
+                      ? `Over ${results.yearsToFIRE} year${results.yearsToFIRE !== 1 ? 's' : ''}, your contributions total ${fmt(Math.max(0, safe(results.totalContribs) - safe(results.currentAssets)))} before investment growth.`
+                      : `At current pace, your contributions over 20 years would total ${fmt(Math.max(0, safe(results.totalContribs) - safe(results.currentAssets)))}.`}
                     {results.savingsRate !== null && results.savingsRate >= 50 && ' A 50%+ savings rate is among the fastest paths to FIRE.'}
                     {results.savingsRate !== null && results.savingsRate < 20 && ' Increasing your savings rate is the highest-impact lever for accelerating FIRE.'}
                   </p>

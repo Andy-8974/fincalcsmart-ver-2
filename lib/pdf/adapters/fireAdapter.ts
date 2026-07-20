@@ -89,10 +89,11 @@ export function buildFIREReportData(
     input.leverState === 'on-track'    ? 'On Track' :
     input.leverState === 'building'    ? 'Building' : 'Not Reachable';
 
-  // Composition bar: Current Assets / Gap to FIRE (total = FIRE target)
-  const total      = Math.max(input.fireTarget, 1);
+  // Composition bar: Initial Assets / Contributions / Growth as fractions of the projected total at FIRE date
+  const contribsOnly = Math.max(0, input.totalContribs - input.currentAssets);
+  const total      = Math.max(input.projectedAtFIRE, 1);
   const assetsPct  = Math.min(1, Math.max(0, input.currentAssets / total));
-  const contribPct = Math.min(1 - assetsPct, Math.max(0, (input.totalContribs) / total));
+  const contribPct = Math.min(1 - assetsPct, Math.max(0, contribsOnly / total));
   const growthPct  = Math.max(0, 1 - assetsPct - contribPct);
 
   // ── Insight paragraphs ────────────────────────────────────────────────────
@@ -104,7 +105,7 @@ export function buildFIREReportData(
       ? `Based on a FIRE target of ${fmt(input.fireTarget)} (${input.fireMultiple}x annual expenses of ${fmt(input.annualExpenses)}, ${ruleLabel}), this scenario is not projected to reach FIRE within a 100-year horizon at current inputs. To reach FIRE in 20 years, a monthly investment of approximately ${fmtx(input.monthlyFor20yr)} would be needed. Current progress: ${Math.round(input.rawProgressPct)}% of target.`
       : `Based on a FIRE target of ${fmt(input.fireTarget)} (${input.fireMultiple}x annual expenses of ${fmt(input.annualExpenses)}, ${ruleLabel}), you are projected to reach Financial Independence at age ${input.fireAge} -- in approximately ${input.yearsToFIRE} year${input.yearsToFIRE !== 1 ? 's' : ''}. Current progress: ${Math.round(input.rawProgressPct)}% of target (${fmt(input.currentAssets)} of ${fmt(input.fireTarget)}).`;
 
-  const p2 = `At ${input.annualRate}% assumed annual return (${FREQ_LABELS[input.freq] ?? input.freq} compounding), investing ${fmtx(input.monthlyInvestment)}/month from a starting base of ${fmt(input.currentAssets)} is projected to reach ${fmt(input.projectedAtFIRE)} at the FIRE date -- composed of ${fmt(input.currentAssets)} in initial assets, ${fmt(input.totalContribs)} in total contributions, and ${fmt(input.investGrowth)} in estimated investment growth. Financial Independence Readiness Score: ${input.readinessScore}/100 (${input.readinessLabel}).`;
+  const p2 = `At ${input.annualRate}% assumed annual return (${FREQ_LABELS[input.freq] ?? input.freq} compounding), investing ${fmtx(input.monthlyInvestment)}/month from a starting base of ${fmt(input.currentAssets)} is projected to reach ${fmt(input.projectedAtFIRE)} at the FIRE date -- composed of ${fmt(input.currentAssets)} in initial assets, ${fmt(contribsOnly)} in contributions, and ${fmt(input.investGrowth)} in estimated investment growth. Financial Independence Readiness Score: ${input.readinessScore}/100 (${input.readinessLabel}).`;
 
   const gapContext = input.gapToFIRE > 0
     ? `You still need ${fmt(input.gapToFIRE)} to close the gap to your FIRE target. Increasing your monthly investment rate, reducing annual expenses, or accepting a higher withdrawal rate (lower FIRE multiple) will accelerate your timeline.`
@@ -115,7 +116,7 @@ export function buildFIREReportData(
   // ── Key drivers ───────────────────────────────────────────────────────────
   const keyDrivers = [
     `Annual expenses (${fmt(input.annualExpenses)}) are the single most powerful FIRE lever. Every $1 reduction in annual spending reduces your FIRE target by ${fmt(input.fireMultiple)} and increases your effective savings rate simultaneously.`,
-    `Monthly investment of ${fmtx(input.monthlyInvestment)}/month compounds to ${fmt(input.totalContribs)} in contributions by the FIRE date. Increasing contributions by 10% meaningfully compresses the timeline.`,
+    `Monthly investment of ${fmtx(input.monthlyInvestment)}/month compounds to ${fmt(contribsOnly)} in contributions by the FIRE date. Increasing contributions by 10% meaningfully compresses the timeline.`,
     `The ${input.fireMultiple}x multiple (${ruleLabel}) determines the target portfolio size. Choosing a lower multiple (e.g., 20x vs 25x) reduces the target by ${fmt(input.annualExpenses * (input.fireMultiple - 20))} but implies a higher withdrawal rate in retirement, increasing longevity risk.`,
   ];
 
@@ -147,7 +148,7 @@ export function buildFIREReportData(
       title: 'Projected Portfolio at FIRE Date',
       segments: [
         { label: 'Initial Assets',        valueFormatted: fmt(input.currentAssets), pct: assetsPct,  color: 'slate' },
-        { label: 'Total Contributions',   valueFormatted: fmt(input.totalContribs), pct: contribPct, color: 'amber' },
+        { label: 'Total Contributions',   valueFormatted: fmt(contribsOnly), pct: contribPct, color: 'amber' },
         { label: 'Investment Growth',     valueFormatted: fmt(input.investGrowth),  pct: growthPct,  color: 'teal'  },
       ],
       totalFormatted: fmt(input.projectedAtFIRE),
@@ -182,7 +183,7 @@ export function buildFIREReportData(
         { label: 'Years to FIRE',           value: input.yearsToFIRE != null ? `${input.yearsToFIRE} yr${input.yearsToFIRE !== 1 ? 's' : ''}` : 'N/A' },
         { label: 'FIRE Age',                value: input.fireAge != null ? `Age ${input.fireAge}` : 'Not reachable', accent: input.fireAge != null ? 'teal' : 'red' },
         { label: 'Projected at FIRE Date',  value: fmt(input.projectedAtFIRE), accent: 'teal' },
-        { label: 'Total Contributions',     value: fmt(input.totalContribs) },
+        { label: 'Total Contributions',     value: fmt(contribsOnly) },
         { label: 'Est. Investment Growth',  value: fmt(input.investGrowth), accent: 'teal' },
         ...(input.savingsRate != null ? [{ label: 'Savings Rate', value: `${input.savingsRate.toFixed(1)}%` }] : []),
         { label: 'Readiness Score',         value: `${input.readinessScore}/100 (${input.readinessLabel})`, accent: readinessAccent },
