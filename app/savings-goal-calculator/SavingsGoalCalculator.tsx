@@ -92,6 +92,11 @@ function safe(n: number): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+function parseAmt(s: string): number {
+  const n = parseFloat(s);
+  return Math.max(0, Math.min(Number.isFinite(n) ? n : 0, Number.MAX_SAFE_INTEGER));
+}
+
 function niceMax(v: number): number {
   if (v <= 0) return 10000;
   const exp = Math.pow(10, Math.floor(Math.log10(v)));
@@ -149,11 +154,11 @@ function solveTimeToGoal(
 }
 
 function computeResults(form: FormState): SGResults | null {
-  const savingsGoal         = Math.max(0, parseFloat(form.savingsGoal)          || 0);
-  const currentSavings      = Math.max(0, parseFloat(form.currentSavings)       || 0);
-  const monthlyContribution = Math.max(0, parseFloat(form.monthlyContribution)  || 0);
-  const annualReturn        = Math.max(0, parseFloat(form.annualReturn)          || 0);
-  const timeHorizon         = Math.max(1, Math.floor(parseFloat(form.timeHorizon) || 1));
+  const savingsGoal         = parseAmt(form.savingsGoal);
+  const currentSavings      = parseAmt(form.currentSavings);
+  const monthlyContribution = parseAmt(form.monthlyContribution);
+  const annualReturn        = parseAmt(form.annualReturn);
+  const timeHorizon         = Math.max(1, Math.floor(parseAmt(form.timeHorizon) || 1));
 
   if (savingsGoal <= 0) return null;
 
@@ -189,7 +194,7 @@ function computeResults(form: FormState): SGResults | null {
   );
 
   // Readiness score / label
-  const readinessScore = Math.round(Math.min(100, Math.max(0, progressPct)));
+  const readinessScore = Math.min(100, Math.max(0, Math.floor(progressPct)));
   const readinessLabel: SGResults['readinessLabel'] =
     readinessScore >= 80 ? 'Excellent' : readinessScore >= 60 ? 'Good' : readinessScore >= 40 ? 'Fair' : 'Poor';
   let readinessStatus: SGResults['readinessStatus'];
@@ -635,7 +640,7 @@ export default function SavingsGoalCalculator({
             )}
 
             {results && (() => {
-              const isOnTrack = results.surplus > 0;
+              const isOnTrack = results.leverState === 'on-track';
               const slices: PieSlice[] = isOnTrack
                 ? [
                     { label: 'Goal Amount', value: results.savingsGoal,      color: '#1DB584', alwaysShow: true },
@@ -999,7 +1004,7 @@ export default function SavingsGoalCalculator({
                     const GR = 60; const GC = 2 * Math.PI * GR;
                     const GARC = (240 / 360) * GC;
                     const GFIL = GARC * (Math.min(100, results.progressPct) / 100);
-                    const isAhead = results.surplus > 0;
+                    const isAhead = results.leverState === 'on-track';
                     const thirdBox = isAhead
                       ? { label: 'Surplus', value: fmt(results.surplus), color: '#1DB584', bg: 'rgba(29,181,132,0.08)', border: 'rgba(29,181,132,0.22)' }
                       : { label: 'Remaining Gap', value: fmt(results.goalGap), color: '#D97706', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.22)' };

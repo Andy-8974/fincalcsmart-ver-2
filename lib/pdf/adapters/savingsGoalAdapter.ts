@@ -173,7 +173,7 @@ export function buildSavingsGoalReportData(
         },
         {
           label:  'Goal Progress',
-          value:  `${Math.min(200, Math.round(input.progressPct))}%`,
+          value:  `${Math.min(100, Math.round(input.progressPct))}%`,
           sub:    input.readinessLabel,
           accent: isOnTrack ? 'teal' : input.progressPct >= 70 ? 'amber' : 'red',
         },
@@ -261,7 +261,7 @@ export function buildSavingsGoalReportData(
         },
         {
           label: 'Goal Progress',
-          value: `${Math.min(200, Math.round(input.progressPct))}% of ${goalLabel.toLowerCase()} goal`,
+          value: `${Math.min(100, Math.round(input.progressPct))}% of ${goalLabel.toLowerCase()} goal`,
         },
         ...(isBehind
           ? [
