@@ -83,7 +83,7 @@ const formulaContent = (
       </div>
       <p className="text-sm text-slate-600 leading-relaxed">
         Where C = P ÷ S, S = spread months, H = horizon months, r_m = effective monthly rate.
-        The first contribution compounds for H months; the last contribution compounds for H − S + 1 months.
+        Contributions are treated as end-of-month deposits: the first contribution compounds for H − 1 months; the last contribution compounds for H − S months.
       </p>
     </section>
 

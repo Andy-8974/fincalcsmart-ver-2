@@ -151,7 +151,8 @@ function computeResults(
   yearsInvested: number,
   spreadMonths: number,
 ): LSDCAResults | null {
-  const totalAmount = Math.max(0, parseFloat(form.totalAmount) || 0);
+  const parsedTotal = parseFloat(form.totalAmount);
+  const totalAmount = Math.max(0, Number.isFinite(parsedTotal) ? parsedTotal : 0);
   const annualRate  = Math.max(0, Math.min(49.9, parseFloat(form.annualRate) || 0));
 
   if (totalAmount <= 0) return null;

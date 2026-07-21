@@ -70,9 +70,8 @@ export function buildLumpSumVsDcaReportData(
   const currency    = region === 'ca' ? 'CAD' : 'USD';
   const regionLabel = region === 'ca' ? 'Canada' : 'United States';
 
-  const advantageAccent: 'teal' | 'amber' | 'slate' =
-    input.advantageLabel === 'Strong'   ? 'teal'  :
-    input.advantageLabel === 'Moderate' ? 'amber' : 'slate';
+  const advantageAccent: 'teal' | 'amber' =
+    input.advantageLabel === 'Minimal' ? 'amber' : 'teal';
 
   const statusType: 'success' | 'warning' | 'danger' =
     input.comparisonState === 'similar' ? 'success' : 'warning';
@@ -95,7 +94,7 @@ export function buildLumpSumVsDcaReportData(
 
   const p2 = `Lump sum advantage: ${fmt(input.gainDelta)} more at year ${input.yearsInvested} (${input.deltaIsSignificant ? 'significant difference' : 'minimal difference'}). Milestone comparison -- at year 10: lump ${fmt(input.lumpAt10)} vs DCA ${fmt(input.dcaAt10)}; at year 20: ${fmt(input.lumpAt20)} vs ${fmt(input.dcaAt20)}; at year 30: ${fmt(input.lumpAt30)} vs ${fmt(input.dcaAt30)}.`;
 
-  const p3 = `Lump sum investing tends to outperform gradual deployment in rising markets because the full principal compounds from day one. The monthly strategy (DCA) spreads market entry over ${input.spreadMonths} months, reducing timing risk but also reducing time-in-market for early tranches. Research consistently shows lump sum outperforms DCA approximately two-thirds of the time in equity markets. However, DCA is often the psychologically easier approach for risk-averse investors or when capital is received gradually (e.g., payroll). This model does not account for market volatility -- the advantage of DCA in volatile or declining markets can be larger than this comparison suggests.`;
+  const p3 = `Lump sum investing tends to outperform gradual deployment in rising markets because the full principal compounds from day one. The monthly strategy (DCA) spreads market entry over ${input.spreadMonths} months, reducing timing risk but also reducing time-in-market for early tranches. Under this calculator's constant positive-return assumption, investing earlier produces a higher projected ending value because more capital remains invested for longer -- this is a direct result of the fixed-rate methodology, not a market forecast. However, DCA is often the psychologically easier approach for risk-averse investors or when capital is received gradually (e.g., payroll). This model does not account for market volatility -- the advantage of DCA in volatile or declining markets can be larger than this comparison suggests.`;
 
   // ── Key drivers ───────────────────────────────────────────────────────────
   const keyDrivers = [
@@ -181,7 +180,7 @@ export function buildLumpSumVsDcaReportData(
       whatItDoes: [
         `Lump sum: full principal P compounded for T months using the effective monthly rate derived from the selected compounding frequency: FV = P x (1 + r)^T.`,
         `Monthly strategy (DCA): equal monthly instalments of totalAmount / spreadMonths, each compounded from its contribution month to end of horizon. FV = sum of monthly x (1+r)^(T-k) for k = 1 to spreadMonths.`,
-        `Advantage Score (0-100): derived from the percentage gain difference between strategies. Significant threshold: >5% absolute gain difference. ComparisonState "similar" when gainDelta is below the significance threshold.`,
+        `Advantage Score (0-100): derived from the percentage gain difference between strategies. Significant threshold: >0.5% absolute gain difference (as a share of total invested amount). ComparisonState "similar" when gainDelta is below the significance threshold.`,
       ],
       notModeled: [
         'Market volatility -- lump sum outperforms in rising markets; DCA reduces loss in declining markets.',
