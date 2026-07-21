@@ -116,11 +116,16 @@ function calcFVRate(r: number, months: number, principal: number, monthly: numbe
   return Math.max(0, principal * growth + monthly * (growth - 1) / r);
 }
 
+function parseAmt(s: string): number {
+  const n = parseFloat(s);
+  return Math.max(0, Math.min(Number.isFinite(n) ? n : 0, Number.MAX_SAFE_INTEGER));
+}
+
 function computeResults(form: FormState, freq: FreqKey, yearsInvested: number): RRSPResults | null {
-  const currentBalance      = Math.max(0, parseFloat(form.currentBalance)      || 0);
-  const availableRoom       = Math.max(0, parseFloat(form.availableRoom)       || 0);
-  const plannedOneTime      = Math.max(0, parseFloat(form.plannedOneTime)      || 0);
-  const monthlyContribution = Math.max(0, parseFloat(form.monthlyContribution) || 0);
+  const currentBalance      = parseAmt(form.currentBalance);
+  const availableRoom       = parseAmt(form.availableRoom);
+  const plannedOneTime      = parseAmt(form.plannedOneTime);
+  const monthlyContribution = parseAmt(form.monthlyContribution);
   const marginalTaxRate     = Math.max(0, Math.min(100, parseFloat(form.marginalTaxRate) || 0));
   const annualRate          = Math.max(0, Math.min(49.9, parseFloat(form.annualRate)     || 0));
 
@@ -160,7 +165,7 @@ function computeResults(form: FormState, freq: FreqKey, yearsInvested: number): 
   // ── Room gauge ──
   const roomGaugeColor = overRoom ? '#ef4444' : roomUsedPct >= 85 ? '#f59e0b' : '#1DB584';
   const roomGaugeBg    = overRoom ? 'rgba(239,68,68,0.10)' : roomUsedPct >= 85 ? 'rgba(245,158,11,0.10)' : 'rgba(29,181,132,0.10)';
-  const roomBadge      = availableRoom === 0 ? 'Not Entered' : overRoom ? 'Over Limit' : roomUsedPct >= 85 ? 'Nearly Full' : roomUsedPct > 0 ? 'Partial' : 'Unused';
+  const roomBadge      = availableRoom === 0 ? 'Not Entered' : overRoom ? 'Over Limit' : roomRemaining <= 0 ? 'Fully Used' : roomUsedPct >= 85 ? 'Nearly Full' : roomUsedPct > 0 ? 'Partial' : 'Unused';
 
   // ── Lever state ──
   const leverState: RRSPResults['leverState'] =
@@ -840,7 +845,7 @@ export default function RRSPSavingsCalculator({
                         {/* Status badge */}
                         <span className="mt-2 px-3 py-1 rounded-full text-xs font-bold"
                           style={{ background: roomGaugeBg, color: roomGaugeColor }}>
-                          {overRoom ? 'Over Limit' : Math.round(roomUsedPct) >= 100 ? 'Fully Used' : roomBadge}
+                          {roomBadge}
                         </span>
                       </>
                     )}

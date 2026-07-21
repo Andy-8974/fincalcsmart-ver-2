@@ -154,7 +154,7 @@ function computeResults(form: FormState, freq: FreqKey, yearsInvested: number): 
   // ── Room gauge ──
   const roomGaugeColor = overRoom ? '#ef4444' : roomUsedPct >= 85 ? '#f59e0b' : '#1DB584';
   const roomGaugeBg    = overRoom ? 'rgba(239,68,68,0.10)' : roomUsedPct >= 85 ? 'rgba(245,158,11,0.10)' : 'rgba(29,181,132,0.10)';
-  const roomBadge      = availableRoom === 0 ? 'Not Entered' : overRoom ? 'Over Limit' : Math.round(roomUsedPct) >= 100 ? 'Fully Used' : roomUsedPct >= 85 ? 'Nearly Full' : roomUsedPct > 0 ? 'Partial' : 'Unused';
+  const roomBadge      = availableRoom === 0 ? 'Not Entered' : overRoom ? 'Over Limit' : roomRemaining <= 0 ? 'Fully Used' : roomUsedPct >= 85 ? 'Nearly Full' : roomUsedPct > 0 ? 'Partial' : 'Unused';
 
   // ── Lever state ──
   const leverState: TFSAResults['leverState'] =
