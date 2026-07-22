@@ -52,12 +52,18 @@ const DEFAULTS: FormState = {
 const SALARY_TYPES: SalaryType[] = ['Annual', 'Monthly', 'Biweekly', 'Weekly', 'Hourly'];
 const PAY_FREQS: PayFreq[] = ['Monthly', 'Semi-monthly', 'Biweekly', 'Weekly'];
 
-const PERIODS_PER_YEAR: Record<PayFreq, number> = {
+const PERIODS_PER_YEAR: Record<Exclude<PayFreq, 'Weekly'>, number> = {
   'Monthly': 12,
   'Semi-monthly': 24,
   'Biweekly': 26,
-  'Weekly': 52,
 };
+
+// Weekly pay periods track the user-entered weeksPerYear (not a fixed 52) so they
+// stay consistent with weeklyGross, which already divides by weeksPerYear.
+function formatPeriods(n: number): string {
+  if (!Number.isFinite(n)) return '0';
+  return String(Math.round(n * 100) / 100);
+}
 
 // ─── Math — do not modify ─────────────────────────────────────────────────────
 
@@ -96,7 +102,7 @@ function computeResults(
 
   const annualDeductions    = annualGross * (deductionRate / 100);
   const annualTakeHome      = annualGross - annualDeductions;
-  const periodsPerYear      = PERIODS_PER_YEAR[payFreq];
+  const periodsPerYear      = payFreq === 'Weekly' ? weeksPerYear : PERIODS_PER_YEAR[payFreq];
   const takeHomePerPeriod   = annualTakeHome / periodsPerYear;
   const effectiveHourlyRate = annualTakeHome / hoursPerYear;
   const takeHomePct         = 100 - deductionRate;
@@ -252,7 +258,7 @@ export default function SalaryCalculator({ formulaContent, faqItems = [] }: Sala
         { label: 'Monthly',      value: results.monthlyGross,     freq: 'Monthly',       periods: '12× per year' },
         { label: 'Semi-monthly', value: results.semiMonthlyGross, freq: 'Semi-monthly',  periods: '24× per year' },
         { label: 'Biweekly',     value: results.biweeklyGross,    freq: 'Biweekly',      periods: '26× per year' },
-        { label: 'Weekly',       value: results.weeklyGross,      freq: 'Weekly',        periods: '52× per year' },
+        { label: 'Weekly',       value: results.weeklyGross,      freq: 'Weekly',        periods: `${formatPeriods(parseFloat(form.weeksPerYear) || 0)}× per year` },
         { label: 'Daily',        value: results.dailyGross,       freq: null,            periods: '5-day week' },
         { label: 'Hourly',       value: results.hourlyEquivalent, freq: null,            periods: 'per hour', suffix: '/hr' },
       ]
@@ -446,7 +452,7 @@ export default function SalaryCalculator({ formulaContent, faqItems = [] }: Sala
                     {fmtx(results.takeHomePerPeriod)}
                   </p>
                   <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', marginTop: 5, fontWeight: 500 }}>
-                    {results.periodsPerYear} paycheques/year · est. {results.takeHomePct.toFixed(0)}% take-home
+                    {formatPeriods(results.periodsPerYear)} paycheques/year · est. {results.takeHomePct.toFixed(0)}% take-home
                   </p>
                 </div>
 
@@ -766,7 +772,7 @@ export default function SalaryCalculator({ formulaContent, faqItems = [] }: Sala
               'Monthly': '12 paycheques per year.',
               'Semi-monthly': '24 paycheques per year (twice per month — differs from biweekly).',
               'Biweekly': '26 paycheques per year — two months per year have 3 paycheques.',
-              'Weekly': `${Math.round(results.periodsPerYear)} paycheques per year.`,
+              'Weekly': `${formatPeriods(results.periodsPerYear)} paycheques per year.`,
             };
             const freqGross: Record<PayFreq, number> = {
               'Monthly':      results.monthlyGross,

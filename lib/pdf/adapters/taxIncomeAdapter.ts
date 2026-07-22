@@ -55,6 +55,13 @@ function makePdfFmtx(region: 'ca' | 'us'): (n: number) => string {
   return (n: number) => nf.format(n);
 }
 
+// Weekly periodsPerYear tracks the user-entered weeksPerYear (not a fixed 52) —
+// display it as received rather than rounding, so the PDF matches the UI exactly.
+function formatPeriods(n: number): string {
+  if (!Number.isFinite(n)) return '0';
+  return String(Math.round(n * 100) / 100);
+}
+
 // ─── Pure data mapper ─────────────────────────────────────────────────────────
 
 export function buildSalaryReportData(
@@ -97,7 +104,7 @@ export function buildSalaryReportData(
     'Monthly':      '12 paycheques per year.',
     'Semi-monthly': '24 paycheques per year (twice per month — differs from biweekly).',
     'Biweekly':     '26 paycheques per year (two months each year have 3 paycheques).',
-    'Weekly':       `${Math.round(input.periodsPerYear)} paycheques per year.`,
+    'Weekly':       `${formatPeriods(input.periodsPerYear)} paycheques per year.`,
   };
 
   // ── Deduction-rate context ─────────────────────────────────────────────────
@@ -119,7 +126,7 @@ export function buildSalaryReportData(
     input.salaryType === 'Weekly'   ? `${fmt(input.salaryAmount)}/week salary` :
                                       `${fmtx(input.salaryAmount)}/hr salary`;
 
-  const p1 = `Based on a ${entryDesc}, your estimated annual gross pay is ${fmt(input.annualGross)}. After applying the ${rate}% estimated deduction rate, your estimated annual take-home is ${fmt(input.annualTakeHome)} — ${input.takeHomePct.toFixed(0)}% of gross. Your ${input.payFreqLabel} take-home is estimated at ${fmtx(input.takeHomePerPeriod)} per paycheque (${Math.round(input.periodsPerYear)} per year). Pay Clarity Score: ${input.payClarityScore}/100 (${input.clarityLabel}).`;
+  const p1 = `Based on a ${entryDesc}, your estimated annual gross pay is ${fmt(input.annualGross)}. After applying the ${rate}% estimated deduction rate, your estimated annual take-home is ${fmt(input.annualTakeHome)} — ${input.takeHomePct.toFixed(0)}% of gross. Your ${input.payFreqLabel} take-home is estimated at ${fmtx(input.takeHomePerPeriod)} per paycheque (${formatPeriods(input.periodsPerYear)} per year). Pay Clarity Score: ${input.payClarityScore}/100 (${input.clarityLabel}).`;
 
   const p2 = region === 'ca'
     ? `${rateContext} Your estimated annual deductions total ${fmt(input.annualDeductions)}. This estimate is user-defined and does not reflect federal or provincial tax brackets, CPP, EI, employer benefits, or province-specific payroll rules. Actual take-home pay depends on your province, filing status, and payroll setup.`
@@ -134,7 +141,7 @@ export function buildSalaryReportData(
       : rate > 35
         ? `Your estimated deduction rate of ${rate}% is above the 20–35% range used by many earners. Review whether all intended deductions are included — or whether adjusting the rate would better reflect your actual payroll situation.`
         : `Your estimated deduction rate of ${rate}% results in ${fmt(input.annualDeductions)} deducted annually. Adjusting this estimate up or down by 5% changes your take-home by approximately ${fmt(input.annualGross * 0.05)} per year.`,
-    `Pay frequency affects cash flow, not total take-home. Your ${input.payFreqLabel} schedule means ${Math.round(input.periodsPerYear)} paycheques per year of ${fmtx(input.takeHomePerPeriod)} each. ${freqDesc[input.payFreqLabel] ?? ''}`,
+    `Pay frequency affects cash flow, not total take-home. Your ${input.payFreqLabel} schedule means ${formatPeriods(input.periodsPerYear)} paycheques per year of ${fmtx(input.takeHomePerPeriod)} each. ${freqDesc[input.payFreqLabel] ?? ''}`,
     `Your effective take-home hourly rate is ${rate > 0 ? `${fmtx(input.effectiveHourlyRate)}/hr after estimated deductions` : `${fmtx(input.hourlyEquivalent)}/hr gross (enter a deduction rate to see effective take-home)`}. Comparing offers: use annual gross and estimated take-home, not just pay frequency amounts.`,
   ];
 
