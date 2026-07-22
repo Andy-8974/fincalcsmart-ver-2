@@ -44,16 +44,19 @@ interface TaxResults {
 
 interface TaxBracket { min: number; rate: number; }
 
-// Canada federal 2025 (approximate — CRA indexes annually)
+// Canada federal 2025 (official CRA brackets; indexed annually)
 const CA_FEDERAL_BRACKETS: TaxBracket[] = [
-  { min: 0,       rate: 15   },
+  { min: 0,       rate: 14.5 },
   { min: 57375,   rate: 20.5 },
   { min: 114750,  rate: 26   },
-  { min: 158519,  rate: 29   },
-  { min: 220000,  rate: 33   },
+  { min: 177882,  rate: 29   },
+  { min: 253414,  rate: 33   },
 ];
-const CA_BASIC_PERSONAL_AMOUNT = 16129; // 2025 approximate
-const CA_BPA_CREDIT_RATE       = 0.15;  // lowest federal rate
+// $16,129 applies for net income <= $177,882 (2025); this simplified model does not
+// track net income separately from gross, so the phase-out to $14,538 above $253,414
+// is not modeled — see Income Tax follow-up report for the documented limitation.
+const CA_BASIC_PERSONAL_AMOUNT = 16129; // 2025 official (full amount)
+const CA_BPA_CREDIT_RATE       = 0.145; // 2025 blended lowest federal rate (Bill C-4)
 
 // USA federal 2025 — Single
 const US_FEDERAL_BRACKETS_SINGLE: TaxBracket[] = [
@@ -77,8 +80,8 @@ const US_FEDERAL_BRACKETS_MFJ: TaxBracket[] = [
   { min: 751600,  rate: 37 },
 ];
 
-const US_STANDARD_DEDUCTION_SINGLE = 15000; // 2025
-const US_STANDARD_DEDUCTION_MFJ    = 30000; // 2025
+const US_STANDARD_DEDUCTION_SINGLE = 15750; // 2025 official (Rev. Proc. 2025-32)
+const US_STANDARD_DEDUCTION_MFJ    = 31500; // 2025 official (Rev. Proc. 2025-32)
 
 // Canada approximate provincial income tax rates (flat estimate — not bracket-accurate)
 // These are rough effective rates for educational planning only.
@@ -147,13 +150,20 @@ function safe(n: number): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+// Guards against non-finite parses (e.g. "Infinity", "1e500") slipping through the
+// truthy `parseFloat(x) || 0` fallback pattern, which does not catch Infinity/-Infinity.
+function parseAmt(str: string): number {
+  const n = parseFloat(str);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function computeResults(
   form: FormState,
   filingStatus: FilingStatus,
   isCA: boolean,
   province: string,
 ): TaxResults | null {
-  const grossIncome = parseFloat(form.grossIncome) || 0;
+  const grossIncome = parseAmt(form.grossIncome);
   if (grossIncome <= 0) return null;
 
   let federalTax: number;
@@ -172,7 +182,7 @@ function computeResults(
 
     const preset   = CA_PROVINCE_APPROX_RATES.find((p) => p.code === province);
     const provPct  = preset?.isManual
-      ? Math.max(0, parseFloat(form.provinceManualRate) || 0)
+      ? Math.max(0, parseAmt(form.provinceManualRate))
       : (preset?.rate ?? 0);
     provinceTax = safe(grossIncome * (provPct / 100));
   } else {
@@ -184,7 +194,7 @@ function computeResults(
     marginalFederalRate = taxable > 0 ? getMarginalRate(taxable, brackets) : brackets[0].rate;
     incomeBand     = taxable <= 0 ? 'Below standard deduction' : getIncomeBand(taxable, brackets);
 
-    const sRate    = Math.max(0, parseFloat(form.stateRate) || 0);
+    const sRate    = Math.max(0, parseAmt(form.stateRate));
     provinceTax    = safe(grossIncome * (sRate / 100));
   }
 
@@ -311,7 +321,7 @@ export default function IncomeTaxCalculator({ formulaContent, faqItems = [] }: I
         region,
         province:             isCA ? activeProvince?.label : undefined,
         filingStatus:         !isCA ? filingStatus : undefined,
-        stateRate:            !isCA ? (parseFloat(form.stateRate) || 0) : undefined,
+        stateRate:            !isCA ? Math.max(0, parseAmt(form.stateRate)) : undefined,
         stdDeductionApplied:  results.stdDeductionApplied,
         federalTax:           results.federalTax,
         provinceTax:          results.provinceTax,

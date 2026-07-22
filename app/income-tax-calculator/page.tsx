@@ -21,12 +21,12 @@ const faqItems: Array<{ question: string; answer: string }> = [
   {
     question: 'What is the Basic Personal Amount (Canada)?',
     answer:
-      'The Basic Personal Amount (BPA) is a non-refundable federal tax credit that reduces how much federal income tax you owe. In 2025, the approximate BPA is $16,129. The credit is calculated at the lowest federal bracket rate (15%), so it reduces your federal tax by approximately $2,419. The BPA is indexed annually — this calculator uses an approximate 2025 figure.',
+      'The Basic Personal Amount (BPA) is a non-refundable federal tax credit that reduces how much federal income tax you owe. For 2025, the BPA is $16,129 for taxpayers with net income up to $177,882 (it is gradually reduced above that threshold, down to $14,538 above $253,414 — this phase-out is not modeled in this simplified calculator). The credit is calculated at the 2025 blended lowest federal bracket rate (14.5%), so it reduces federal tax by approximately $2,339. The BPA is indexed annually.',
   },
   {
     question: 'What is the standard deduction (USA)?',
     answer:
-      'The standard deduction is a flat amount subtracted from your gross income before federal tax brackets are applied, reducing your taxable income. For 2025, the standard deduction is approximately $15,000 for Single filers and $30,000 for Married Filing Jointly. You may itemize instead if your deductible expenses exceed the standard deduction, but this calculator applies the standard deduction only.',
+      'The standard deduction is a flat amount subtracted from your gross income before federal tax brackets are applied, reducing your taxable income. For 2025, the standard deduction is $15,750 for Single filers and $31,500 for Married Filing Jointly. You may itemize instead if your deductible expenses exceed the standard deduction, but this calculator applies the standard deduction only.',
   },
   {
     question: 'Why is the provincial tax only an approximation?',
@@ -60,7 +60,7 @@ const formulaContent = (
       <div className="my-4 p-4 font-mono space-y-1.5"
         style={{ borderRadius: '8px', background: '#0A1628', color: '#1DB584', fontSize: '13px', fontWeight: 600, letterSpacing: '0.02em' }}>
         <div>Progressive tax on gross income using 5 federal brackets</div>
-        <div>BPA Credit = Basic Personal Amount × 15%</div>
+        <div>BPA Credit = Basic Personal Amount × 14.5%</div>
         <div>Federal Tax = max(0, Progressive Tax − BPA Credit)</div>
         <div>Provincial Tax ≈ Gross Income × Approx. Provincial Rate</div>
         <div>Total Tax = Federal Tax + Provincial Tax</div>
@@ -86,7 +86,7 @@ const formulaContent = (
         <div>Effective Rate = Total Tax ÷ Gross Income × 100</div>
       </div>
       <p className="text-sm text-slate-600">
-        Standard deduction applied automatically ($15,000 Single / $30,000 MFJ for 2025). State/local tax is a flat rate on gross income entered manually.
+        Standard deduction applied automatically ($15,750 Single / $31,500 MFJ for 2025). State/local tax is a flat rate on gross income entered manually.
       </p>
     </section>
 
@@ -100,7 +100,7 @@ const formulaContent = (
           <table className="w-full text-sm">
             <thead style={{ background: 'rgba(29,181,132,0.08)' }}>
               <tr>
-                <th className="px-3 py-2 text-left font-semibold text-slate-700 text-xs" colSpan={2}>Canada Federal (approx. 2025)</th>
+                <th className="px-3 py-2 text-left font-semibold text-slate-700 text-xs" colSpan={2}>Canada Federal (2025)</th>
               </tr>
               <tr style={{ borderTop: '1px solid #E4E9EF' }}>
                 <th className="px-3 py-1.5 text-left font-semibold text-slate-600 text-xs">Income</th>
@@ -109,11 +109,11 @@ const formulaContent = (
             </thead>
             <tbody style={{ borderTop: '1px solid #E4E9EF' }}>
               {[
-                ['$0 – $57,375', '15%'],
+                ['$0 – $57,375', '14.5%'],
                 ['$57,375 – $114,750', '20.5%'],
-                ['$114,750 – $158,519', '26%'],
-                ['$158,519 – $220,000', '29%'],
-                ['Over $220,000', '33%'],
+                ['$114,750 – $177,882', '26%'],
+                ['$177,882 – $253,414', '29%'],
+                ['Over $253,414', '33%'],
               ].map(([inc, rate]) => (
                 <tr key={inc} style={{ borderBottom: '1px solid #F1F4F7' }}>
                   <td className="px-3 py-1.5 text-xs text-slate-600">{inc}</td>

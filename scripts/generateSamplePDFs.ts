@@ -1346,8 +1346,8 @@ async function main() {
   // ── Income Tax CA — Ontario $85K (2025) ──────────────────────────────────
   {
     const grossCA = 85000;
-    const fedRaw  = Math.min(57375, grossCA) * 0.15 + Math.max(0, grossCA - 57375) * 0.205;
-    const bpa     = Math.round(16129 * 0.15);
+    const fedRaw  = Math.min(57375, grossCA) * 0.145 + Math.max(0, grossCA - 57375) * 0.205;
+    const bpa     = Math.round(16129 * 0.145);
     const fedTax  = Math.max(0, Math.round(fedRaw - bpa));
     const provTax = Math.round(grossCA * 0.0915);
     const totalTax = fedTax + provTax;
@@ -1378,7 +1378,7 @@ async function main() {
   // ── Income Tax US — Single $95K, 5% state (2025) ─────────────────────────
   {
     const grossUS = 95000;
-    const stdDed  = 15000;
+    const stdDed  = 15750;
     const taxable = Math.max(0, grossUS - stdDed); // 80000
     const fedTaxUS = Math.round(
       Math.min(11925, taxable) * 0.10 +

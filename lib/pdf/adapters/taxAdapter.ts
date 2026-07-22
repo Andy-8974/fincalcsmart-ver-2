@@ -64,12 +64,15 @@ export function buildTaxReportData(
   const clarityAccent: 'teal' | 'amber' | 'red' =
     input.clarityScore >= 70 ? 'teal' : input.clarityScore >= 55 ? 'amber' : 'red';
 
+  // Derived from the same clarityScore thresholds as the UI's Take-Home Clarity
+  // Score/label (70 / 55) so the PDF's status color and label never diverge from
+  // each other or from the on-page clarityLabel for the same result.
   const statusType: 'success' | 'warning' | 'danger' =
-    input.effectiveRate < 20 ? 'success' : input.effectiveRate < 30 ? 'warning' : 'danger';
+    input.clarityScore >= 70 ? 'success' : input.clarityScore >= 55 ? 'warning' : 'danger';
 
   const statusLabel =
-    input.effectiveRate < 15 ? 'Low Tax Rate' :
-    input.effectiveRate < 25 ? 'Moderate Tax Rate' : 'High Tax Rate';
+    input.clarityScore >= 70 ? 'Low Tax Rate' :
+    input.clarityScore >= 55 ? 'Moderate Tax Rate' : 'High Tax Rate';
 
   // Composition bar: after-tax / federal / provincial
   const gross        = Math.max(input.grossIncome, 1);
@@ -190,8 +193,8 @@ export function buildTaxReportData(
     methodology: {
       whatItDoes: [
         region === 'ca'
-          ? `Applies ${input.taxYear} Canada federal progressive tax brackets. Basic Personal Amount (BPA) non-refundable credit applied: min(raw federal tax, BPA x 15%), cannot reduce below zero. Provincial estimate uses a flat approximate rate applied to gross income.`
-          : `Applies ${input.taxYear} US federal progressive tax brackets. Standard deduction applied (Single: $15,000; MFJ: $30,000) to reduce taxable income before bracket calculation. State/local tax applied as a flat rate on gross income.`,
+          ? `Applies ${input.taxYear} Canada federal progressive tax brackets. Basic Personal Amount (BPA) non-refundable credit applied: min(raw federal tax, BPA x 14.5%), cannot reduce below zero. Provincial estimate uses a flat approximate rate applied to gross income.`
+          : `Applies ${input.taxYear} US federal progressive tax brackets. Standard deduction applied (Single: $15,750; MFJ: $31,500) to reduce taxable income before bracket calculation. State/local tax applied as a flat rate on gross income.`,
         'Effective tax rate = total tax / gross income. Marginal federal rate = federal rate bracket applying to the last dollar of gross income.',
         'Monthly take-home = (gross income - total tax) / 12. All estimates use the inputs entered and do not include payroll deductions beyond the tax amounts shown.',
       ],
