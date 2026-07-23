@@ -3,7 +3,7 @@ import { type Faq } from '@/components/layout/CalculatorLayout';
 import USAMortgageCalculator from './USAMortgageCalculator';
 
 export const metadata: Metadata = {
-  title: 'US Mortgage Calculator 2025 | PMI, 30-Year Fixed, Amortization',
+  title: 'US Mortgage Calculator 2026 | PMI, 30-Year Fixed, Amortization',
   description:
     'Calculate your US mortgage payment with PMI, the 28/36 affordability rule, conventional and FHA loan comparisons, and a full amortization schedule. Compare 15 vs 20 vs 30-year terms.',
 };

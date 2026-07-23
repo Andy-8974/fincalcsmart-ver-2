@@ -4,7 +4,7 @@ import { type Faq } from '@/components/layout/CalculatorLayout';
 import CanadaMortgageCalculator from './CanadaMortgageCalculator';
 
 export const metadata: Metadata = {
-  title: 'Canadian Mortgage Calculator 2025 | CMHC, Semi-Annual Compounding',
+  title: 'Canadian Mortgage Calculator 2026 | CMHC, Semi-Annual Compounding',
   description:
     'Calculate your Canadian mortgage payment with CMHC insurance, semi-annual compounding (Interest Act), GDS/TDS ratios, and a full amortization schedule. Compare 15 vs 25 vs 30-year terms.',
 };

@@ -7,13 +7,13 @@ export const metadata: Metadata = {
   description:
     'Find out how much mortgage you qualify for in Canada or the USA. Instant GDS/TDS and 28/36 ratio analysis with B-20 stress test. No sign-up.',
   alternates: {
-    canonical: 'https://fincalcsmart.com/mortgage-qualifier-calculator',
+    canonical: 'https://www.fincalcsmart.com/mortgage-qualifier-calculator',
   },
   openGraph: {
     title: 'Mortgage Qualifier Calculator 2026 — Canada & USA',
     description:
       'Find out how much mortgage you qualify for in Canada or the USA. Instant GDS/TDS and 28/36 ratio analysis with B-20 stress test.',
-    url: 'https://fincalcsmart.com/mortgage-qualifier-calculator',
+    url: 'https://www.fincalcsmart.com/mortgage-qualifier-calculator',
     siteName: 'FinCalcSmart Pro',
     type: 'website',
   },

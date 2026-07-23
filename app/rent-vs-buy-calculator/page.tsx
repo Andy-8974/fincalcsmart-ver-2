@@ -3,7 +3,7 @@ import { type Faq } from '@/components/layout/CalculatorLayout';
 import RentVsBuyCalculator from './RentVsBuyCalculator';
 
 export const metadata: Metadata = {
-  title: 'Rent vs Buy Calculator 2025 | Break-even Analysis',
+  title: 'Rent vs Buy Calculator 2026 | Break-even Analysis',
   description:
     'Compare the true long-term cost of renting versus buying a home. See estimated break-even year, equity built, and what drives the decision — Canada and USA.',
 };
