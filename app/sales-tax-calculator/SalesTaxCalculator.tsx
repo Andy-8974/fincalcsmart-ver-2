@@ -484,7 +484,7 @@ export default function SalesTaxCalculator({ formulaContent, faqItems = [] }: Sa
                   {/* Total */}
                   <div className="flex items-center justify-between py-1.5">
                     <span className="text-[13px]" style={{ color: '#CBD5E1' }}>Total (tax-included)</span>
-                    <span className="text-[13px]" style={{ color: '#1DB584', fontWeight: 700 }}>{fmt(results.total)}</span>
+                    <span className="text-[13px]" style={{ color: '#1DB584', fontWeight: 700 }}>{fmtx(results.total)}</span>
                   </div>
 
                   {/* Rate / share */}
